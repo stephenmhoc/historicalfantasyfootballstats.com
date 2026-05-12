@@ -1,6 +1,7 @@
 import { FilterBar } from './components/FilterBar';
 import { StatsTable } from './components/StatsTable';
 import { ScoringModal } from './components/ScoringModal';
+import { DATA_END_YEAR, DATA_START_YEAR, TOTAL_DATA_YEARS } from './utils/constants';
 
 function App() {
   return (
@@ -9,10 +10,13 @@ function App() {
       <header className="bg-emerald-800 text-white py-6 px-4">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl md:text-3xl font-bold">Historical Fantasy Football Stats</h1>
-          <p className="text-emerald-200 text-sm mt-1">1970-2024</p>
+          <p className="text-emerald-200 text-sm mt-1">
+            {DATA_START_YEAR}-{DATA_END_YEAR}
+          </p>
           <p className="text-emerald-100/80 text-sm mt-3 max-w-2xl">
-            Compare fantasy football performance across 55 years of data. Filter by position and year,
-            customize your league's scoring settings, and discover the greatest fantasy seasons of all time.
+            Compare fantasy football performance across {TOTAL_DATA_YEARS} years of data. Filter by
+            position and year, customize your league's scoring settings, and discover the greatest fantasy
+            seasons of all time.
           </p>
         </div>
       </header>

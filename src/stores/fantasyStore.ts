@@ -27,7 +27,7 @@ export const useFantasyStore = create<FantasyStore>()(
   persist(
     (set) => ({
       positionFilter: 'All',
-      yearFilter: 'Last35',
+      yearFilter: 'Last36',
       scoringConfig: DEFAULT_SCORING,
       isConfigModalOpen: false,
 

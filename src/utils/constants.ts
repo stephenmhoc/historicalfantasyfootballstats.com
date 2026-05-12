@@ -15,9 +15,13 @@ export const DEFAULT_SCORING: ScoringConfig = {
 
 export const POSITIONS: PositionFilter[] = ['All', 'QB', 'RB', 'WR', 'TE'];
 
+export const DATA_START_YEAR = 1970;
+export const DATA_END_YEAR = 2025;
+export const TOTAL_DATA_YEARS = DATA_END_YEAR - DATA_START_YEAR + 1;
+
 export const YEAR_FILTERS: { value: YearFilter; label: string }[] = [
-  { value: 'Last35', label: 'Last 35 Years' },
-  { value: 'Last55', label: 'Last 55 Years' },
+  { value: 'Last36', label: 'Last 36 Years' },
+  { value: 'Last56', label: 'Last 56 Years' },
   { value: '2020s', label: "2020's" },
   { value: '2010s', label: "2010's" },
   { value: '2000s', label: "2000's" },
@@ -26,11 +30,11 @@ export const YEAR_FILTERS: { value: YearFilter; label: string }[] = [
   { value: '1970s', label: "1970's" },
 ];
 
-// Generate individual years from 2024 down to 1970
+// Generate individual years from the current data range.
 export const INDIVIDUAL_YEARS: { value: number; label: string }[] = Array.from(
-  { length: 2024 - 1970 + 1 },
+  { length: TOTAL_DATA_YEARS },
   (_, i) => {
-    const year = 2024 - i;
+    const year = DATA_END_YEAR - i;
     return { value: year, label: String(year) };
   }
 );

@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "process-data": "node scripts/processData.js",
+    "add-2025-data": "node scripts/add2025Data.js",
     "test": "vitest",
     "test:e2e": "playwright test",
     "deploy": "npm run build && wrangler pages deploy dist"

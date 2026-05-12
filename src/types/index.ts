@@ -3,7 +3,10 @@ export type Position = 'QB' | 'RB' | 'WR' | 'TE';
 export type PositionFilter = Position | 'All';
 
 export type YearFilter =
+  | 'AllYears'
+  | 'Last56'
   | 'Last55'
+  | 'Last36'
   | 'Last35'
   | '2020s'
   | '2010s'
