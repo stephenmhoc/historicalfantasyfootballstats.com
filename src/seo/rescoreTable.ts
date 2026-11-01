@@ -1,14 +1,11 @@
 import type { PlayerSeason, ScoringConfig } from '../types';
 import { calculateFantasyPoints } from '../utils/calculations';
-import { DEFAULT_SCORING } from '../utils/constants';
+import { isDefaultScoring } from '../utils/view';
 
 /** Order of the values in a row's data-stats attribute. */
 export const STAT_KEYS = ['passYds', 'passTD', 'passInt', 'rushAtt', 'rushYds', 'rushTD', 'rec', 'recYds', 'recTD', 'fmbLost'] as const;
 
 const CUSTOM_CLASS = 'your-score';
-
-export const isDefaultScoring = (config: ScoringConfig) =>
-  (Object.keys(DEFAULT_SCORING) as (keyof ScoringConfig)[]).every((key) => config[key] === DEFAULT_SCORING[key]);
 
 function scoreRow(row: HTMLTableRowElement, config: ScoringConfig) {
   const values = row.dataset.stats!.split(',').map(Number);

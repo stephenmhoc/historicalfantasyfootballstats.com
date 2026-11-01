@@ -1,15 +1,38 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import type { PlayerSeason, PlayerSeasonWithPoints } from '../types';
 import { useFantasyStore } from '../stores/fantasyStore';
-import { calculateFantasyPoints } from '../utils/calculations';
-import { filterByPosition, filterByYearRange } from '../utils/filters';
-import { MAX_RESULTS } from '../utils/constants';
+import { DEFAULT_POSITION, DEFAULT_YEAR } from '../utils/constants';
+import { computeView, isDefaultScoring } from '../utils/view';
+
+/** The default view, which the build puts in the homepage HTML. */
+function readPrebuiltRows(): PlayerSeason[] | null {
+  const script = document.getElementById('default-view');
+  if (!script?.textContent) return null;
+
+  try {
+    return JSON.parse(script.textContent);
+  } catch {
+    return null;
+  }
+}
+
+const prebuiltRows = readPrebuiltRows();
+
+/** Runs a task once the browser is idle, and returns a function that cancels it. */
+function whenIdle(task: () => void) {
+  if ('requestIdleCallback' in window) {
+    const handle = requestIdleCallback(task, { timeout: 5000 });
+    return () => cancelIdleCallback(handle);
+  }
+  const handle = setTimeout(task, 2000);
+  return () => clearTimeout(handle);
+}
 
 export function useFantasyData() {
-  const [rawData, setRawData] = useState<PlayerSeason[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [allRows, setAllRows] = useState<PlayerSeason[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const requested = useRef(false);
 
   const [weeklyData, setWeeklyData] = useState<{ year: number; rows: PlayerSeason[] } | null>(null);
 
@@ -23,22 +46,40 @@ export function useFantasyData() {
   );
   const weeklyYear = typeof weekFilter === 'number' && typeof yearFilter === 'number' ? yearFilter : null;
 
-  // Load data on mount
+  // Only this exact view can use the prebuilt rows, so saved settings or a new
+  // filter never show a ranking built for different ones.
+  const canUsePrebuilt =
+    prebuiltRows !== null &&
+    positionFilter === DEFAULT_POSITION &&
+    yearFilter === DEFAULT_YEAR &&
+    weekFilter === 'Season' &&
+    isDefaultScoring(scoringConfig);
+
+  // The full data loads while idle, or at once when the current view needs it.
   useEffect(() => {
-    fetch('/data/fantasy_data.json')
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to load data');
-        return res.json();
-      })
-      .then((data: PlayerSeason[]) => {
-        setRawData(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, []);
+    if (allRows || requested.current) return;
+
+    const load = () => {
+      requested.current = true;
+      setError(null);
+      fetch('/data/fantasy_data.json')
+        .then((res) => {
+          if (!res.ok) throw new Error('Failed to load data');
+          return res.json();
+        })
+        .then((rows: PlayerSeason[]) => setAllRows(rows))
+        .catch((err) => {
+          requested.current = false;
+          setError(err.message);
+        });
+    };
+
+    if (!canUsePrebuilt) {
+      load();
+      return;
+    }
+    return whenIdle(load);
+  }, [allRows, canUsePrebuilt]);
 
   // Weekly data is only needed when a week is selected, so it loads on demand
   useEffect(() => {
@@ -64,34 +105,17 @@ export function useFantasyData() {
 
   const weeklyLoading = weeklyYear !== null && weeklyData?.year !== weeklyYear;
 
-  // Calculate filtered and scored data
+  const rows = allRows ?? (canUsePrebuilt ? prebuiltRows : null);
+
   const data = useMemo<PlayerSeasonWithPoints[]>(() => {
-    if (loading || weeklyLoading || !rawData.length) return [];
+    if (!rows || weeklyLoading) return [];
 
-    // Apply filters
-    const showWeek = weeklyYear !== null;
-    const source = showWeek ? (weeklyData?.rows ?? []).filter((row) => row.week === weekFilter) : rawData;
-    let filtered = filterByPosition(source, positionFilter);
-    filtered = filterByYearRange(filtered, yearFilter);
+    const source = weeklyYear !== null ? (weeklyData?.rows ?? []).filter((row) => row.week === weekFilter) : rows;
+    return computeView(source, { position: positionFilter, year: yearFilter, scoring: scoringConfig });
+  }, [rows, weeklyData, weeklyYear, weeklyLoading, positionFilter, yearFilter, weekFilter, scoringConfig]);
 
-    // Calculate fantasy points for each player
-    const withPoints = filtered.map((player) => ({
-      ...player,
-      fantasyPoints: calculateFantasyPoints(player, scoringConfig),
-      rank: 0, // Placeholder, will be set after sorting
-    }));
+  // A failed background load stays quiet while the prebuilt rows are on screen.
+  const visibleError = rows === null || weeklyYear !== null ? error : null;
 
-    // Sort by fantasy points descending
-    withPoints.sort((a, b) => b.fantasyPoints - a.fantasyPoints);
-
-    // Limit to top N results and assign ranks
-    const topResults = withPoints.slice(0, MAX_RESULTS);
-    topResults.forEach((player, index) => {
-      player.rank = index + 1;
-    });
-
-    return topResults;
-  }, [rawData, weeklyData, weeklyYear, weeklyLoading, loading, positionFilter, yearFilter, weekFilter, scoringConfig]);
-
-  return { data, loading: loading || weeklyLoading, error };
+  return { data, loading: (rows === null && !visibleError) || weeklyLoading, error: visibleError };
 }

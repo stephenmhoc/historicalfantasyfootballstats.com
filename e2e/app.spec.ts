@@ -224,6 +224,47 @@ test.describe('Historical Fantasy Football Stats', () => {
     await expect(page.getByRole('link', { name: /Explore all pages/ })).toHaveAttribute('href', '/explore');
   });
 
+  test('shows the default table without the full data file', async ({ page }) => {
+    await page.route('**/data/fantasy_data.json', (route) => route.abort());
+    await page.goto('/');
+
+    await expect(page.locator('tbody tr')).toHaveCount(500);
+    await expect(page.getByText('Error loading data')).toHaveCount(0);
+  });
+
+  test('waits for the full data when a filter changes', async ({ page }) => {
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route('**/data/fantasy_data.json', async (route) => {
+      await held;
+      await route.continue();
+    });
+
+    await page.goto('/');
+    await expect(page.locator('tbody tr')).toHaveCount(500);
+
+    await page.getByLabel('Year').selectOption('1985');
+    await expect(page.getByText('Loading data...')).toBeVisible();
+
+    release();
+    await expect(page.getByText('Loading data...')).toBeHidden({ timeout: 10000 });
+    await expect(page.locator('tbody tr').first()).toContainText('1985');
+  });
+
+  test('saved scoring never shows the default ranking', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'fantasy-mvp-storage',
+        JSON.stringify({ state: { yearFilter: 'Last36', positionFilter: 'All', scoringConfig: { reception: 0 } }, version: 1 })
+      );
+    });
+    await page.route('**/data/fantasy_data.json', (route) => route.abort());
+    await page.goto('/');
+
+    await expect(page.getByText('Error loading data')).toBeVisible();
+    await expect(page.locator('tbody tr')).toHaveCount(0);
+  });
+
   test('columns can be sorted from the keyboard', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('Loading data...')).toBeHidden({ timeout: 10000 });

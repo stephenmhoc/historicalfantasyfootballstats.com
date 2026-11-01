@@ -6,7 +6,7 @@ import { cloudflare } from '@cloudflare/vite-plugin'
 import dataMeta from './src/generated/dataMeta.json'
 import { buildCsvFiles } from './src/seo/csv'
 import { siteFooter } from './src/seo/footer'
-import { buildLlmsTxt, buildPages, buildSitemap, homepageContent, homepageHeader, type SeoData } from './src/seo/pages'
+import { buildLlmsTxt, buildPages, buildSitemap, defaultViewScript, homepageContent, homepageHeader, type SeoData } from './src/seo/pages'
 
 // Substituted into index.html, so the page metadata follows the data.
 process.env.VITE_DATA_RANGE = `${dataMeta.startYear}-${dataMeta.endYear}`
@@ -38,6 +38,7 @@ function seoPages(): Plugin {
       return html
         .replace('<!--static-header-->', homepageHeader(data))
         .replace('<!--static-content-->', homepageContent(data))
+        .replace('<!--default-view-->', defaultViewScript(data))
     },
     generateBundle(_, bundle) {
       if (this.environment.name !== 'client') return

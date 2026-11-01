@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PositionFilter, WeekFilter, YearFilter, ScoringConfig } from '../types';
-import { DEFAULT_SCORING } from '../utils/constants';
+import { DEFAULT_POSITION, DEFAULT_SCORING, DEFAULT_YEAR } from '../utils/constants';
 import { STORAGE_KEY } from './storageKey';
 
 interface FantasyStore {
@@ -38,8 +38,8 @@ const RENAMED_YEAR_FILTERS: Record<string, YearFilter> = {
 export const useFantasyStore = create<FantasyStore>()(
   persist(
     (set) => ({
-      positionFilter: 'All',
-      yearFilter: 'Last36',
+      positionFilter: DEFAULT_POSITION,
+      yearFilter: DEFAULT_YEAR,
       weekFilter: 'Season',
       scoringConfig: DEFAULT_SCORING,
       isConfigModalOpen: false,

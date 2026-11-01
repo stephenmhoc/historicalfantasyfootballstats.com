@@ -1,6 +1,7 @@
 import type { PlayerSeason, Position, WeekSummary } from '../types';
 import { calculateFantasyPoints } from '../utils/calculations';
 import { DEFAULT_SCORING } from '../utils/constants';
+import { buildDefaultRows } from '../utils/view';
 import { CSV_FIELDS } from './csv';
 import { aboutLinks, siteFooter, statsLinks } from './footer';
 import { STAT_KEYS } from './rescoreTable';
@@ -764,6 +765,15 @@ function miniTable(title: string, rows: Scored[]) {
     `<h2>${title}</h2><table><thead><tr><th>Rank</th><th>Player</th><th>Pos</th><th>Year</th>` +
     `<th>PPR Points</th></tr></thead><tbody>${body}</tbody></table>`
   );
+}
+
+/**
+ * The default table rows for the homepage, so it renders without the full data
+ * file. Every build recreates this, so it follows each data update.
+ */
+export function defaultViewScript(data: SeoData): string {
+  const rows = JSON.stringify(buildDefaultRows(data.rows)).replace(/</g, '\\u003c');
+  return `<script id="default-view" type="application/json">${rows}</script>`;
 }
 
 /** The homepage header. It sits outside React, so it paints once and never re-renders. */
