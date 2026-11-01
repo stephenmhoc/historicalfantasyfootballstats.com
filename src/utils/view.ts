@@ -1,3 +1,4 @@
+import type { SortingState } from '@tanstack/react-table';
 import type { PlayerSeason, PlayerSeasonWithPoints, PositionFilter, ScoringConfig, YearFilter } from '../types';
 import { calculateFantasyPoints } from './calculations';
 import { DEFAULT_POSITION, DEFAULT_SCORING, DEFAULT_YEAR, MAX_RESULTS } from './constants';
@@ -25,6 +26,8 @@ export function computeView(rows: PlayerSeason[], { position, year, scoring }: V
   });
   return top;
 }
+
+export const DEFAULT_SORTING: SortingState = [{ id: 'fantasyPoints', desc: true }];
 
 export const DEFAULT_VIEW: ViewOptions = {
   position: DEFAULT_POSITION,

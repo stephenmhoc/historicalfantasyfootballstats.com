@@ -117,6 +117,7 @@ Its docs page is `public/mcp.html`, served when a browser or crawler requests `/
 | `sitemap.xml`, `llms.txt` | `src/seo/pages.ts` | Built from the page list |
 
 - **Page content:** each page opens with a sentence answering its main question, then adds a table, FAQs, a canonical URL, and JSON-LD.
+- **Homepage first paint:** `src/seo/homepage.tsx` renders the real filter bar and the first 30 table rows with the app's own components, so the page looks right before React loads. React then replaces that HTML with the live app.
 - **Homepage table:** the build puts the default view's 500 rows in the page as JSON (`defaultViewScript`), so the table renders with no data request. The full `fantasy_data.json` loads while the browser is idle, or right away if a filter or saved scoring needs it. Any update that changes the data rebuilds the page, so this stays current on its own.
 - **Homepage header:** it is plain HTML from `homepageHeader` in `src/seo/pages.ts`, outside React, so the main text paints right away.
 - **Footer:** `src/seo/footer.ts` is the only footer, used by the React app and every static page. `public/footer.css` styles it. `public/mcp.html` and `public/404.html` hold a `<!--site-footer-->` placeholder that the build fills in.

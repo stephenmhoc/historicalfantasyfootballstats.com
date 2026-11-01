@@ -224,6 +224,21 @@ test.describe('Historical Fantasy Football Stats', () => {
     await expect(page.getByRole('link', { name: /Explore all pages/ })).toHaveAttribute('href', '/explore');
   });
 
+  test('first paint matches the page React renders', async ({ browser, page }) => {
+    const before = await browser.newContext({ javaScriptEnabled: false });
+    const staticPage = await before.newPage();
+    await staticPage.goto('/');
+    const staticHeaders = await staticPage.locator('table').first().locator('thead th').allTextContents();
+    const staticRow = await staticPage.locator('table').first().locator('tbody tr').first().locator('td').allTextContents();
+    await expect(staticPage.getByRole('button', { name: 'Scoring Settings' })).toBeVisible();
+    await before.close();
+
+    await page.goto('/');
+    await expect(page.locator('tbody tr')).toHaveCount(500);
+    expect(await page.locator('thead th').allTextContents()).toEqual(staticHeaders);
+    expect(await page.locator('tbody tr').first().locator('td').allTextContents()).toEqual(staticRow);
+  });
+
   test('shows the default table without the full data file', async ({ page }) => {
     await page.route('**/data/fantasy_data.json', (route) => route.abort());
     await page.goto('/');

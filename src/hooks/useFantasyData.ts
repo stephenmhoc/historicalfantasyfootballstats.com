@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { captureException } from '@sentry/react';
 import { useShallow } from 'zustand/react/shallow';
 import type { PlayerSeason, PlayerSeasonWithPoints } from '../types';
 import { useFantasyStore } from '../stores/fantasyStore';
@@ -7,14 +8,20 @@ import { computeView, isDefaultScoring } from '../utils/view';
 
 /** The default view, which the build puts in the homepage HTML. */
 function readPrebuiltRows(): PlayerSeason[] | null {
-  const script = document.getElementById('default-view');
+  const script = typeof document === 'undefined' ? null : document.getElementById('default-view');
   if (!script?.textContent) return null;
 
   try {
     return JSON.parse(script.textContent);
-  } catch {
+  } catch (error) {
+    captureException(error, { tags: { data_file: 'default-view' } });
     return null;
   }
+}
+
+/** Reports a failed data load. A failed fetch is a TypeError: the visitor's network, not the site. */
+function reportLoadError(error: unknown, file: string) {
+  if (!(error instanceof TypeError)) captureException(error, { tags: { data_file: file } });
 }
 
 const prebuiltRows = readPrebuiltRows();
@@ -70,6 +77,7 @@ export function useFantasyData() {
         .then((rows: PlayerSeason[]) => setAllRows(rows))
         .catch((err) => {
           requested.current = false;
+          reportLoadError(err, 'fantasy_data.json');
           setError(err.message);
         });
     };
@@ -95,6 +103,7 @@ export function useFantasyData() {
         if (!cancelled) setWeeklyData({ year: weeklyYear, rows });
       })
       .catch((err) => {
+        reportLoadError(err, `weekly/${weeklyYear}.json`);
         if (!cancelled) setError(err.message);
       });
 
