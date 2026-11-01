@@ -26,15 +26,15 @@ export function getWeeksForYear(year: YearFilter): WeekSummary[] {
   return typeof year === 'number' ? (WEEKLY_SEASONS[year] ?? []) : [];
 }
 
-// The two newest seasons lead the list, since they are what people look for most.
+// The two newest seasons sit above the decades, since they are what people look for most.
 const RECENT_YEARS = 2;
 
 const yearOption = (year: number) => ({ value: year, label: String(year) });
 
 export const YEAR_FILTERS: { value: YearFilter; label: string }[] = [
-  ...Array.from({ length: RECENT_YEARS }, (_, i) => yearOption(DATA_END_YEAR - i)),
   { value: 'Last36', label: 'Last 36 Years' },
   { value: 'AllYears', label: `All ${TOTAL_DATA_YEARS} Years` },
+  ...Array.from({ length: RECENT_YEARS }, (_, i) => yearOption(DATA_END_YEAR - i)),
   { value: '2020s', label: "2020's" },
   { value: '2010s', label: "2010's" },
   { value: '2000s', label: "2000's" },
