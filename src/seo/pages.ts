@@ -1,6 +1,7 @@
 import type { PlayerSeason, Position, WeekSummary } from '../types';
 import { calculateFantasyPoints } from '../utils/calculations';
 import { DEFAULT_SCORING } from '../utils/constants';
+import { CSV_FIELDS } from './csv';
 import { aboutLinks, siteFooter, statsLinks } from './footer';
 import { STAT_KEYS } from './rescoreTable';
 
@@ -69,7 +70,7 @@ export interface PageAssets {
   styles: string[];
 }
 
-type Scored = PlayerSeason & { ppr: number; half: number; standard: number; ppg: number };
+export type Scored = PlayerSeason & { ppr: number; half: number; standard: number; ppg: number };
 
 const escapeHtml = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -77,7 +78,7 @@ const escapeHtml = (text: string) =>
 const scoreWith = (row: PlayerSeason, reception: number) =>
   calculateFantasyPoints(row, { ...DEFAULT_SCORING, reception });
 
-function scored(row: PlayerSeason): Scored {
+export function scored(row: PlayerSeason): Scored {
   const ppr = scoreWith(row, 1);
   return {
     ...row,
@@ -610,9 +611,85 @@ function explorePage(data: SeoData, assets: PageAssets): SeoPage {
   });
 }
 
+function dataPage(data: SeoData, assets: PageAssets): SeoPage {
+  const { startYear, endYear, weeklySeasons } = data.meta;
+  const weeklyYears = Object.keys(weeklySeasons).filter((year) => weeklySeasons[year].length);
+  const url = (path: string) => `${SITE}${path}`;
+  const count = data.rows.length.toLocaleString('en-US');
+  const description = `Download historical fantasy football data for free: ${count} QB, RB, WR, and TE seasons from ${startYear} through ${endYear} as CSV, with PPR, half-PPR, and standard points.`;
+
+  const download = (name: string, path: string) => `<li><a href="${path}" download>${escapeHtml(name)}</a></li>`;
+  const years: number[] = [];
+  for (let year = endYear; year >= startYear; year--) years.push(year);
+
+  const fields = CSV_FIELDS.map(({ name, description: text }) => `<tr><td><code>${name}</code></td><td>${escapeHtml(text)}</td></tr>`).join('');
+
+  return renderPage(data, assets, {
+    path: '/data',
+    title: `Historical Fantasy Football Data: Free CSV Downloads (${startYear}-${endYear})`,
+    description,
+    heading: 'Historical Fantasy Football Data',
+    answer: `Download fantasy football data for every QB, RB, WR, and TE season from ${startYear} through ${endYear} as free CSV files, with no signup. The full file has ${count} player seasons, each with stats and PPR, half-PPR, and standard points.`,
+    crumbs: [{ name: 'Home', path: '/' }, { name: 'Data', path: '/data' }],
+    sections: [
+      section(
+        'Download the data',
+        `<ul class="links">${download(`All seasons, ${startYear}-${endYear} (CSV)`, '/data/csv/all-seasons.csv')}${weeklyYears.map((year) => download(`${year} weekly stats (CSV)`, `/data/csv/weekly-${year}.csv`)).join('')}</ul>`
+      ),
+      section('Download one season', `<ul class="links">${years.map((year) => download(String(year), `/data/csv/${year}.csv`)).join('')}</ul>`),
+      section(
+        'Other ways to use it',
+        linkList([
+          { name: 'Season data as JSON', path: '/data/fantasy_data.json' },
+          { name: 'MCP server for AI agents', path: '/mcp' },
+          { name: 'Stats explorer', path: '/' },
+        ])
+      ),
+      section('Fields', `<div class="table fields"><table><thead><tr><th scope="col">Column</th><th scope="col">Meaning</th></tr></thead><tbody>${fields}</tbody></table></div>`),
+      section(
+        'Sources and limits',
+        `<p>Seasons through 2025 come from <a href="https://www.pro-football-reference.com/">Pro Football Reference</a>. Seasons from 2026 onward come from <a href="https://github.com/nflverse/nflverse-data">nflverse</a>. The current season is checked daily.</p><p>Stats cover the regular season only. See <a href="/methodology">how scoring and data work</a> for the rules and known limits.</p>`
+      ),
+    ],
+    faqs: [
+      {
+        question: 'Where can I download historical fantasy football data?',
+        answer: `This page has free CSV files for every NFL season from ${startYear} through ${endYear}, for all seasons at once or one season at a time.`,
+      },
+      {
+        question: 'Does the data include fantasy points?',
+        answer: 'Yes. Every row has PPR, half-PPR, and standard points, plus the raw stats needed to apply your own scoring.',
+      },
+      {
+        question: 'Is there weekly fantasy football data?',
+        answer: `Weekly files are available for ${weeklyYears.join(', ') || 'the live season'}. Earlier seasons are season totals only.`,
+      },
+    ],
+    live: true,
+    scoring: 'none',
+    schema: [{
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      name: `Historical Fantasy Football Data ${startYear}-${endYear}`,
+      description,
+      url: url('/data'),
+      temporalCoverage: `${startYear}/..`,
+      isAccessibleForFree: true,
+      keywords: ['fantasy football', 'NFL', 'historical stats', 'PPR'],
+      ...(data.meta.updatedAt ? { dateModified: data.meta.updatedAt.slice(0, 10) } : {}),
+      creator: { '@type': 'Person', name: 'Stephen Meriwether', url: 'https://merimerimeri.com' },
+      isBasedOn: ['https://www.pro-football-reference.com/', 'https://github.com/nflverse/nflverse-data'],
+      distribution: [
+        { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: url('/data/csv/all-seasons.csv') },
+        { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: url('/data/fantasy_data.json') },
+      ],
+    }],
+  });
+}
+
 export function buildPages(data: SeoData, assets: PageAssets = { scripts: [], styles: [] }): SeoPage[] {
   const { startYear, endYear, weeklySeasons } = data.meta;
-  const pages = [explorePage(data, assets), seasonsIndex(data, assets), methodologyPage(data, assets), allTimePage(data, assets), careerPage(data, assets)];
+  const pages = [dataPage(data, assets), explorePage(data, assets), seasonsIndex(data, assets), methodologyPage(data, assets), allTimePage(data, assets), careerPage(data, assets)];
 
   for (const position of POSITIONS) {
     pages.push(allTimePage(data, assets, position), careerPage(data, assets, position));
@@ -656,6 +733,7 @@ ${[
   line({ name: `${endYear} Fantasy Leaders`, path: `/seasons/${endYear}` }, 'current season leaders, with weekly and position pages'),
   line({ name: 'Best Seasons of All Time', path: '/all-time' }, 'top single seasons overall and by position'),
   line({ name: 'Career Leaders', path: '/career-leaders' }, 'most career fantasy points overall and by position'),
+  line({ name: 'Download the Data', path: '/data' }, 'free CSV downloads for every season, with a field guide'),
   line({ name: 'Explore', path: '/explore' }, 'an index of every leaderboard on the site'),
   line({ name: 'All Seasons', path: '/seasons' }, `an index of every season since ${startYear}`),
   line({ name: 'How Scoring Works', path: '/methodology' }, 'scoring rules, data sources, and limits'),
@@ -664,6 +742,7 @@ ${[
 ## For agents
 
 - [MCP server](${SITE}/mcp): a free, open MCP server for live queries and custom scoring, with no API key
+- [All seasons CSV](${SITE}/data/csv/all-seasons.csv): every season row with fantasy points
 - [Season data](${SITE}/data/fantasy_data.json): all season rows as JSON
 - [Weekly data](${SITE}/data/weekly/${endYear}.json): ${endYear} weekly rows as JSON
 `;
@@ -692,8 +771,9 @@ export function homepageContent(data: SeoData): string {
   return (
     `<main style="max-width:56rem;margin:0 auto;padding:1.5rem 1rem">` +
     `<h1>Historical Fantasy Football Stats</h1>` +
-    `<p>Compare NFL fantasy football stats from ${startYear}-${endYear}. Rank every QB, RB, WR, ` +
-    `and TE season with PPR, half-PPR, standard, or your own custom scoring.</p>` +
+    `<p>Compare historical fantasy football data from ${startYear}-${endYear}. Rank every QB, RB, WR, ` +
+    `and TE season with PPR, half-PPR, standard, or your own custom scoring, or ` +
+    `<a href="/data">download the data</a>.</p>` +
     miniTable(`${endYear} Fantasy Football Leaders`, rank(data.rows.filter((row) => row.year === endYear)).slice(0, 10)) +
     miniTable('Best Fantasy Seasons of All Time', rank(data.rows).slice(0, 10)) +
     `<ul>${links}</ul></main>`

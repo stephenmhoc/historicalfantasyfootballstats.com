@@ -14,6 +14,7 @@ export function statsLinks(endYear: number): SiteLink[] {
 
 export const aboutLinks: SiteLink[] = [
   { name: 'Explore All Pages', path: '/explore' },
+  { name: 'Download the Data', path: '/data' },
   { name: 'How Scoring Works', path: '/methodology' },
   { name: 'MCP Server', path: '/mcp' },
 ];

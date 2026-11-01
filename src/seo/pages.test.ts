@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import meta from '../generated/dataMeta.json';
+import { buildCsvFiles, toCsv } from './csv';
 import { siteFooter } from './footer';
 import { STAT_KEYS } from './rescoreTable';
 import { buildLlmsTxt, buildPages, buildSitemap, homepageContent, type SeoData, type SeoPage } from './pages';
@@ -61,7 +62,9 @@ describe('buildPages', () => {
   it('only links to pages that exist', () => {
     const known = new Set([...pages.map((p) => p.path), '/', '/mcp']);
     for (const p of pages) {
-      for (const [, href] of p.html.matchAll(/<a href="(\/[^"]*)"/g)) expect(known).toContain(href);
+      for (const [, href] of p.html.matchAll(/<a href="(\/[^"]*)"/g)) {
+        if (!href.startsWith('/data/')) expect(known).toContain(href);
+      }
     }
     for (const [, href] of homepageContent(data).matchAll(/<a href="(\/[^"]*)"/g)) expect(known).toContain(href);
   });
@@ -93,6 +96,29 @@ describe('buildPages', () => {
     for (const href of [`/seasons/${meta.endYear}"`, '/seasons/1970"', '/all-time/qb"', '/career-leaders/te"', '/methodology"']) {
       expect(html).toContain(href);
     }
+  });
+
+  it('offers a working download for every link on the data page', () => {
+    const files = new Set(buildCsvFiles(data).map(({ fileName }) => `/${fileName}`));
+    const links = [...page('/data').html.matchAll(/<a href="([^"]+\.csv)"/g)].map((match) => match[1]);
+    expect(links.length).toBe(files.size);
+    for (const link of links) expect(files).toContain(link);
+  });
+
+  it('writes CSV rows that agree with the site', () => {
+    const lines = toCsv(data.rows.filter((row) => row.year === 2019)).trim().split('\n');
+    const columns = lines[0].split(',');
+    const top = lines[1].split(',');
+    expect(top[columns.indexOf('player')]).toBe('Christian McCaffrey');
+    expect(top[columns.indexOf('ppr_points')]).toBe('469.2');
+    expect(columns).not.toContain('week');
+    expect(lines).toHaveLength(data.rows.filter((row) => row.year === 2019).length + 1);
+  });
+
+  it('quotes CSV values that contain commas or quotes', () => {
+    const [row] = data.rows;
+    const csv = toCsv([{ ...row, player: 'Odell "OBJ" Beckham, Jr.' }]);
+    expect(csv).toContain('"Odell ""OBJ"" Beckham, Jr."');
   });
 
   it('points AI engines at the key pages', () => {

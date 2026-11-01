@@ -177,3 +177,13 @@ th:nth-child(-n + 3),
 td:nth-child(-n + 3) {
   text-align: left;
 }
+.fields table {
+  white-space: normal;
+}
+.fields th,
+.fields td {
+  text-align: left;
+}
+.fields code {
+  white-space: nowrap;
+}
