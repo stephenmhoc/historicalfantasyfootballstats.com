@@ -568,7 +568,7 @@ function methodologyPage(data: SeoData, assets: PageAssets): SeoPage {
       ),
       section(
         'Data sources',
-        `<p>Seasons through 2025 come from Pro Football Reference. Seasons from 2026 onward come from <a href="https://github.com/nflverse/nflverse-data">nflverse</a>, with games played taken from snap counts.</p><p>The current season is checked daily, which also picks up official stat corrections. Compared on the 2025 season, the nflverse pipeline matched Pro Football Reference on every passing, rushing, receiving, and fumble stat for the 569 players compared.</p>`
+        `<p>Seasons through 2025 come from Pro Football Reference. Seasons from 2026 onward come from <a href="https://github.com/nflverse/nflverse-data" target="_blank" rel="noopener noreferrer">nflverse</a>, with games played taken from snap counts.</p><p>The current season is checked daily, which also picks up official stat corrections. Compared on the 2025 season, the nflverse pipeline matched Pro Football Reference on every passing, rushing, receiving, and fumble stat for the 569 players compared.</p>`
       ),
       section(
         'Known limits',
@@ -654,7 +654,7 @@ function dataPage(data: SeoData, assets: PageAssets): SeoPage {
       section('Fields', `<div class="table-scroll fields"><table><thead><tr><th scope="col">Column</th><th scope="col">Meaning</th></tr></thead><tbody>${fields}</tbody></table></div>`),
       section(
         'Sources and limits',
-        `<p>Seasons through 2025 come from <a href="https://www.pro-football-reference.com/">Pro Football Reference</a>. Seasons from 2026 onward come from <a href="https://github.com/nflverse/nflverse-data">nflverse</a>. The current season is checked daily.</p><p>Stats cover the regular season only. See <a href="/methodology">how scoring and data work</a> for the rules and known limits.</p>`
+        `<p>Seasons through 2025 come from <a href="https://www.pro-football-reference.com/" target="_blank" rel="noopener noreferrer">Pro Football Reference</a>. Seasons from 2026 onward come from <a href="https://github.com/nflverse/nflverse-data" target="_blank" rel="noopener noreferrer">nflverse</a>. The current season is checked daily.</p><p>Stats cover the regular season only. See <a href="/methodology">how scoring and data work</a> for the rules and known limits.</p>`
       ),
     ],
     faqs: [

@@ -36,15 +36,15 @@ const SOCIAL_LINKS = [
 ];
 
 const icon = ({ name, url, path }: (typeof SOCIAL_LINKS)[number]) =>
-  `<li><a href="${url}" aria-label="${name}" title="${name}"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="${path}"/></svg></a></li>`;
+  `<li><a href="${url}" target="_blank" rel="noopener noreferrer" aria-label="${name}" title="${name}"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="${path}"/></svg></a></li>`;
 
 /** The one footer for every page. Styled by public/footer.css. */
 export function siteFooter(endYear: number): string {
   return `<footer class="site-footer"><div class="site-footer-inner">
-<div class="site-footer-brand"><a href="/">Historical Fantasy Football Stats</a><p>Regular-season data from <a href="https://www.pro-football-reference.com/">Pro Football Reference</a> and <a href="https://github.com/nflverse/nflverse-data">nflverse</a>.</p></div>
+<div class="site-footer-brand"><a href="/">Historical Fantasy Football Stats</a><p>Regular-season data from <a href="https://www.pro-football-reference.com/" target="_blank" rel="noopener noreferrer">Pro Football Reference</a> and <a href="https://github.com/nflverse/nflverse-data" target="_blank" rel="noopener noreferrer">nflverse</a>.</p></div>
 <nav aria-label="Stats"><h2>Stats</h2>${list(statsLinks(endYear))}</nav>
 <nav aria-label="About"><h2>About</h2>${list(aboutLinks)}</nav>
 <nav aria-label="Elsewhere"><h2>Elsewhere</h2><ul class="site-footer-icons">${SOCIAL_LINKS.map(icon).join('')}</ul></nav>
-<p class="site-footer-credit">Made with ❤️ by <a href="https://merimerimeri.com">Stephen Meriwether</a>. Go Texans!</p>
+<p class="site-footer-credit">Made with ❤️ by <a href="https://merimerimeri.com" target="_blank" rel="noopener noreferrer">Stephen Meriwether</a>. Go Texans!</p>
 </div></footer>`;
 }
