@@ -82,8 +82,7 @@ main ul:not(.links) {
 .scoring-bar .note {
   flex-basis: 100%;
 }
-.scoring-bar p[hidden],
-.scoring-bar button[hidden] {
+.scoring-bar p[hidden] {
   display: none;
 }
 .scoring-bar button {

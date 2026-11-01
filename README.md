@@ -117,9 +117,11 @@ Its docs page is `public/mcp.html`, served when a browser or crawler requests `/
 | `sitemap.xml`, `llms.txt` | `src/seo/pages.ts` | Built from the page list |
 
 - **Page content:** each page opens with a sentence answering its main question, then adds a table, FAQs, a canonical URL, and JSON-LD.
+- **Homepage header:** it is plain HTML from `homepageHeader` in `src/seo/pages.ts`, outside React, so the main text paints right away.
 - **Footer:** `src/seo/footer.ts` is the only footer, used by the React app and every static page. `public/footer.css` styles it. `public/mcp.html` and `public/404.html` hold a `<!--site-footer-->` placeholder that the build fills in.
-- **Scoring on static pages:** `src/seo/scoringWidget.tsx` loads the same modal as the homepage, and `src/seo/rescoreTable.ts` applies custom scoring. Each table row stores its stats in a `data-stats` attribute. Custom scoring adds a Your Score column and reranks only the rows on that page.
-- **Styles:** generated pages load Tailwind for the modal as well as `public/pages.css`, so class names in `pages.css` must not match Tailwind utilities. A `.table` class once broke mobile layouts this way.
+- **Scoring on static pages:** `src/seo/scoringLoader.ts` is the only script a page loads up front. It pulls in `src/seo/scoringWidget.tsx`, which has React and the same modal as the homepage, when a visitor opens the settings or has saved settings. `src/seo/rescoreTable.ts` applies custom scoring. Each table row stores its stats in a `data-stats` attribute. Custom scoring adds a Your Score column and reranks only the rows on that page.
+- **Styles:** the build inlines `public/pages.css` and `public/footer.css` into each generated page, and all CSS into the homepage, so no stylesheet blocks rendering. Tailwind arrives with the modal, so class names in `pages.css` must not match Tailwind utilities, and those pages must look right without Tailwind's reset. A `.table` class once broke mobile layouts this way.
+- **Caching:** `public/_headers` caches hashed files in `/assets` for a year and `/data` for an hour. HTML revalidates on every visit.
 
 ## Data
 

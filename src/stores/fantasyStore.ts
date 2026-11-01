@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PositionFilter, WeekFilter, YearFilter, ScoringConfig } from '../types';
 import { DEFAULT_SCORING } from '../utils/constants';
+import { STORAGE_KEY } from './storageKey';
 
 interface FantasyStore {
   // Filters
@@ -55,7 +56,7 @@ export const useFantasyStore = create<FantasyStore>()(
       closeConfigModal: () => set({ isConfigModalOpen: false }),
     }),
     {
-      name: 'fantasy-mvp-storage',
+      name: STORAGE_KEY,
       version: 1,
       migrate: (persisted) => {
         const state = persisted as PersistedState;

@@ -10,6 +10,7 @@
       content="Historical fantasy football stats and data from %VITE_DATA_RANGE%. Rank every QB, RB, WR, and TE season with custom PPR, half-PPR, or standard scoring, or download the data."
     />
     <link rel="stylesheet" href="/footer.css" />
+    <link rel="preload" href="/data/fantasy_data.json" as="fetch" crossorigin="anonymous" />
     <meta name="author" content="Stephen Meriwether" />
     <meta name="robots" content="index,follow" />
     <meta name="theme-color" content="#0f766e" />
@@ -75,6 +76,7 @@
     </script>
   </head>
   <body>
+    <!--static-header-->
     <div id="root"><!--static-content--></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

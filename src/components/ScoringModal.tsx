@@ -43,7 +43,7 @@ function ScoringInput({ label, value, onChange, step = 1, suffix }: ScoringInput
                      [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none
                      focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
         />
-        <span className="w-12 text-xs text-gray-400">{suffix}</span>
+        <span className="w-12 text-xs text-gray-500">{suffix}</span>
       </div>
     </div>
   );
