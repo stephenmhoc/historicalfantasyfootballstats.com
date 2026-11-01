@@ -104,6 +104,8 @@ function topThree(rows: Scored[]) {
   return `${identity(second)} and ${identity(third)} are next with ${points(second.ppr)} and ${points(third.ppr)}.`;
 }
 
+const PPR_COLUMN = 5;
+
 const POSITION_COLUMNS: Record<Position | 'All', [string, keyof PlayerSeason][]> = {
   All: [['Pass Yds', 'passYds'], ['Pass TD', 'passTD'], ['Rush Yds', 'rushYds'], ['Rush TD', 'rushTD'], ['Rec', 'rec'], ['Rec Yds', 'recYds'], ['Rec TD', 'recTD']],
   QB: [['Pass Yds', 'passYds'], ['Pass TD', 'passTD'], ['Int', 'passInt'], ['Rush Yds', 'rushYds'], ['Rush TD', 'rushTD']],
@@ -132,18 +134,22 @@ function statsTable(caption: string, rows: Scored[], position: Position | 'All',
         ...columns.map(([, key]) => row[key]),
       ];
       const stats = STAT_KEYS.map((key) => row[key]).join(',');
-      return `<tr data-rank="${index + 1}" data-stats="${stats}">${cells.map((cell) => `<td>${cell}</td>`).join('')}</tr>`;
+      return `<tr data-rank="${index + 1}" data-stats="${stats}">${cells.map((cell, column) => `<td${column === PPR_COLUMN ? ' class="score"' : ''}>${cell}</td>`).join('')}</tr>`;
     })
     .join('');
 
   return (
-    `<div class="table"><table data-rescorable><caption>${escapeHtml(caption)}</caption><thead><tr>` +
+    `<p class="note">${escapeHtml(caption)}</p><div class="table-scroll"><table data-rescorable aria-label="${escapeHtml(caption)}"><thead><tr>` +
     headings.map((heading) => `<th scope="col">${heading}</th>`).join('') +
     `</tr></thead><tbody>${body}</tbody></table></div>`
   );
 }
 
-const section = (heading: string, body: string) => `<section><h2>${escapeHtml(heading)}</h2>${body}</section>`;
+const section = (heading: string, body: string) => {
+  // Data tables run edge to edge in their card, like the homepage table.
+  const attrs = body.includes('data-rescorable') ? ' class="table-section"' : '';
+  return `<section${attrs}><h2>${escapeHtml(heading)}</h2>${body}</section>`;
+};
 
 const linkList = (links: Crumb[]) =>
   `<ul class="links">${links.map(({ name, path }) => `<li><a href="${path}">${escapeHtml(name)}</a></li>`).join('')}</ul>`;
@@ -550,7 +556,7 @@ function methodologyPage(data: SeoData, assets: PageAssets): SeoPage {
     sections: [
       section(
         'Scoring rules',
-        `<div class="table"><table><thead><tr><th scope="col">Stat</th><th scope="col">PPR</th><th scope="col">Half</th><th scope="col">Std</th></tr></thead><tbody>
+        `<div class="table-scroll"><table><thead><tr><th scope="col">Stat</th><th scope="col">PPR</th><th scope="col">Half</th><th scope="col">Std</th></tr></thead><tbody>
 <tr><td>Reception</td><td>1</td><td>0.5</td><td>0</td></tr>
 <tr><td>Passing yards</td><td>1 per 25</td><td>1 per 25</td><td>1 per 25</td></tr>
 <tr><td>Passing touchdown</td><td>4</td><td>4</td><td>4</td></tr>
@@ -645,7 +651,7 @@ function dataPage(data: SeoData, assets: PageAssets): SeoPage {
           { name: 'Stats explorer', path: '/' },
         ])
       ),
-      section('Fields', `<div class="table fields"><table><thead><tr><th scope="col">Column</th><th scope="col">Meaning</th></tr></thead><tbody>${fields}</tbody></table></div>`),
+      section('Fields', `<div class="table-scroll fields"><table><thead><tr><th scope="col">Column</th><th scope="col">Meaning</th></tr></thead><tbody>${fields}</tbody></table></div>`),
       section(
         'Sources and limits',
         `<p>Seasons through 2025 come from <a href="https://www.pro-football-reference.com/">Pro Football Reference</a>. Seasons from 2026 onward come from <a href="https://github.com/nflverse/nflverse-data">nflverse</a>. The current season is checked daily.</p><p>Stats cover the regular season only. See <a href="/methodology">how scoring and data work</a> for the rules and known limits.</p>`
@@ -751,7 +757,7 @@ ${[
 function miniTable(title: string, rows: Scored[]) {
   const body = rows
     .map((row, index) =>
-      `<tr><td>${index + 1}</td><td>${escapeHtml(row.player)}</td><td>${row.position}</td><td>${row.year}</td><td>${points(row.ppr)}</td></tr>`
+      `<tr><td>${index + 1}</td><td>${escapeHtml(row.player)}</td><td>${row.position}</td><td>${row.year}</td><td><strong>${points(row.ppr)}</strong></td></tr>`
     )
     .join('');
 

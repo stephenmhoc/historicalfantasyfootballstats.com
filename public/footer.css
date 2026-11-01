@@ -41,6 +41,18 @@
   padding: 0;
   list-style: none;
 }
+.site-footer-icons {
+  display: flex;
+  gap: 14px;
+  padding-top: 2px;
+}
+.site-footer-icons a {
+  display: block;
+  color: #4b5563;
+}
+.site-footer-icons a:hover {
+  color: #047857;
+}
 .site-footer-credit {
   grid-column: 1 / -1;
   padding-top: 16px;
@@ -49,9 +61,6 @@
 }
 @media (max-width: 720px) {
   .site-footer-inner {
-    grid-template-columns: 1fr 1fr;
-  }
-  .site-footer-brand {
-    grid-column: 1 / -1;
+    grid-template-columns: 1fr;
   }
 }

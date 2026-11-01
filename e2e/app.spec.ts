@@ -201,12 +201,14 @@ test.describe('Historical Fantasy Football Stats', () => {
     await expect(points).toHaveText(changed!);
   });
 
-  test('leads the year list with the two newest seasons', async ({ page }) => {
+  test('lists year ranges, then the two newest seasons', async ({ page }) => {
     await page.goto('/');
     const options = await page.getByLabel('Year').locator('option').allTextContents();
-    const newest = Number(options[0]);
+    const newest = Number(options[2]);
 
-    expect(options[1]).toBe(String(newest - 1));
+    expect(options[0]).toMatch(/^Last \d+ Years$/);
+    expect(options[1]).toMatch(/^All \d+ Years$/);
+    expect(options[3]).toBe(String(newest - 1));
     expect(new Set(options).size).toBe(options.length);
   });
 
