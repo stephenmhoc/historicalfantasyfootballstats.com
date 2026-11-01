@@ -99,6 +99,10 @@ Its docs page is `public/mcp.html`, served when a browser or crawler requests `/
 - **Per IP:** the Worker's rate limiter returns 429 after 10 requests in 10 seconds. `workers.dev` and preview URLs are off, so the custom domain is the only way in.
 - **Per request:** bodies over 16 KB are rejected and results are capped at 100 rows.
 
+## SEO Pages
+
+The build generates a static page for every season, recent position leaders, weekly leaders, all-time and career lists, plus `sitemap.xml` and `llms.txt` (`src/seo/pages.ts`). They use the same data and scoring as the site, so the daily update refreshes them.
+
 ## Data Sources
 
 - **1970-2024:** [Fantasy Data](https://www.kaggle.com/datasets/heefjones/nfl-fantasy-data-1970-2024) on Kaggle (Pro Football Reference data). Targets before 1992 and fumbles lost before 1994 are estimates, which is why some are fractional.

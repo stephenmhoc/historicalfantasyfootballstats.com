@@ -8,6 +8,15 @@ import {
   getWeeksForYear,
 } from './utils/constants';
 
+const siteLinks = [
+  { name: `${DATA_END_YEAR} Fantasy Leaders`, path: `/seasons/${DATA_END_YEAR}` },
+  { name: 'Best Seasons of All Time', path: '/all-time' },
+  { name: 'Career Leaders', path: '/career-leaders' },
+  { name: 'All Seasons', path: '/seasons' },
+  { name: 'How Scoring Works', path: '/methodology' },
+  { name: 'MCP Server', path: '/mcp' },
+];
+
 function App() {
   const latestWeek = getWeeksForYear(DATA_END_YEAR).at(-1)?.week;
 
@@ -58,6 +67,17 @@ function App() {
               Stephen Meriwether
             </a>
           </p>
+          <nav aria-label="Popular pages" className="mb-3">
+            <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+              {siteLinks.map(({ name, path }) => (
+                <li key={path}>
+                  <a href={path} className="text-emerald-700 hover:text-emerald-900 underline">
+                    {name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
           <p className="mt-2 space-x-4">
             <a
               href="https://x.com/stephenmhoc"
@@ -75,10 +95,6 @@ function App() {
               className="text-gray-500 hover:text-gray-900"
             >
               Open source on GitHub
-            </a>
-            <span className="text-gray-400">•</span>
-            <a href="/mcp" className="text-gray-500 hover:text-gray-900">
-              MCP server
             </a>
           </p>
           <p className="mt-2 text-gray-400">
