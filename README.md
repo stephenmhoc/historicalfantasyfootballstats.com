@@ -74,6 +74,12 @@ cf auth login
 npm run deploy
 ```
 
+## Monitoring
+
+Production builds report errors and 20% of traces to the `historicalfantasyfootballstats` project in Sentry, from both the browser and the Worker, tagged with the commit they were built from. The `update-data` monitor raises an issue if the nightly data job fails or stops running.
+
+Builds with `SENTRY_AUTH_TOKEN` set also upload source maps to Sentry and delete them from the output. In CI this comes from a repository secret; builds without it create no source maps.
+
 ## MCP Server
 
 An open, read-only [MCP](https://modelcontextprotocol.io) server runs at `https://historicalfantasyfootballstats.com/mcp`. It needs no API key.

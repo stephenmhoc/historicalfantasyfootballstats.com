@@ -1,11 +1,14 @@
 import fs from 'fs';
 import path from 'path';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { captureException } from '@sentry/cloudflare';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 // @ts-expect-error Plain JS build script with no type declarations
 import { packRows } from '../../scripts/buildMcpData.js';
 import meta from '../generated/dataMeta.json';
 import { Dataset } from './dataset';
 import { handleMcpRequest } from './server';
+
+vi.mock('@sentry/cloudflare', () => ({ captureException: vi.fn() }));
 
 // Exercises the real dataset through the real request handler.
 const DATA_DIR = path.join(__dirname, '..', '..', 'public', 'data');
@@ -232,5 +235,29 @@ describe('tools', () => {
       const result = await tool(name, args as Record<string, unknown>);
       expect(result.isError).toBe(true);
     }
+    expect(captureException).not.toHaveBeenCalled();
+  });
+
+  it('reports internal failures to Sentry, tagged with the tool', async () => {
+    const failure = new Error('stats.bin returned HTTP 404');
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const request = new Request('https://example.com/mcp', {
+      method: 'POST',
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name: 'get_data_info', arguments: {} },
+      }),
+    });
+
+    const response = await handleMcpRequest(request, async () => {
+      throw failure;
+    });
+
+    expect(response.status).toBe(500);
+    expect(captureException).toHaveBeenCalledWith(failure, {
+      tags: { mcp_method: 'tools/call', mcp_tool: 'get_data_info' },
+    });
   });
 });

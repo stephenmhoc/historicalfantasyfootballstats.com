@@ -1,3 +1,4 @@
+import { captureException } from '@sentry/cloudflare';
 import { Dataset } from './dataset';
 import { TOOL_DEFINITIONS, ToolInputError, callTool, toolExists } from './tools';
 
@@ -230,6 +231,8 @@ export async function handleMcpRequest(request: Request, loadDataset: () => Prom
   } catch (error) {
     if (error instanceof RpcFailure) return failure(id, error);
     console.error('MCP request failed', error);
+    // Answered below as a JSON-RPC error, so Sentry would never see it as a thrown one.
+    captureException(error, { tags: { mcp_method: method, mcp_tool: String(body.params?.name ?? 'none') } });
     return failure(id, new RpcFailure(ERROR.internal, 'Internal error', 500));
   }
 }

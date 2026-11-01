@@ -1,5 +1,7 @@
+import { execSync } from 'node:child_process'
 import { readFileSync, readdirSync } from 'node:fs'
 import { defineConfig, type Plugin } from 'vite'
+import { sentryVitePlugin } from '@sentry/vite-plugin'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { cloudflare } from '@cloudflare/vite-plugin'
@@ -10,6 +12,12 @@ import { buildLlmsTxt, buildPages, buildSitemap, defaultViewScript, homepageCont
 
 // Substituted into index.html, so the page metadata follows the data.
 process.env.VITE_DATA_RANGE = `${dataMeta.startYear}-${dataMeta.endYear}`
+
+const release = process.env.GITHUB_SHA ?? execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim()
+process.env.VITE_SENTRY_RELEASE = release
+
+// Only builds that can upload source maps create them, so none can reach the public assets.
+const authToken = process.env.SENTRY_AUTH_TOKEN
 
 function loadSeoData(): SeoData {
   const readJson = (file: string) => JSON.parse(readFileSync(file, 'utf8'))
@@ -78,7 +86,23 @@ function seoPages(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss(), cloudflare(), seoPages()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    cloudflare(),
+    seoPages(),
+    authToken &&
+      sentryVitePlugin({
+        org: 'merimerimeri-software',
+        project: 'historicalfantasyfootballstats',
+        authToken,
+        release: { name: release },
+        sourcemaps: { filesToDeleteAfterUpload: ['.cloudflare/output/**/*.map'] },
+        telemetry: false,
+      }),
+  ],
+  define: { __SENTRY_DEBUG__: false },
+  build: { sourcemap: authToken ? 'hidden' : false },
   environments: {
     client: {
       build: {
