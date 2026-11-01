@@ -3,6 +3,8 @@ import path from 'path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import meta from '../generated/dataMeta.json';
 import { buildCsvFiles, toCsv } from './csv';
+import { MAX_RESULTS } from '../utils/constants';
+import { DEFAULT_VIEW, buildDefaultRows, computeView } from '../utils/view';
 import { siteFooter } from './footer';
 import { STAT_KEYS } from './rescoreTable';
 import { buildLlmsTxt, buildPages, buildSitemap, homepageContent, type SeoData, type SeoPage } from './pages';
@@ -129,6 +131,13 @@ describe('buildPages', () => {
         expect(link).toContain('rel="noopener noreferrer"');
       }
     }
+  });
+
+  it('prebuilds a default view identical to one from the full data', () => {
+    const prebuilt = buildDefaultRows(data.rows);
+    expect(prebuilt.length).toBe(MAX_RESULTS);
+    expect(computeView(prebuilt, DEFAULT_VIEW)).toEqual(computeView(data.rows, DEFAULT_VIEW));
+    expect(prebuilt[0]).not.toHaveProperty('fantasyPoints');
   });
 
   it('points AI engines at the key pages', () => {

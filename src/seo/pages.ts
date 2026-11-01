@@ -1,6 +1,7 @@
 import type { PlayerSeason, Position, WeekSummary } from '../types';
 import { calculateFantasyPoints } from '../utils/calculations';
 import { DEFAULT_SCORING } from '../utils/constants';
+import { buildDefaultRows } from '../utils/view';
 import { CSV_FIELDS } from './csv';
 import { aboutLinks, siteFooter, statsLinks } from './footer';
 import { STAT_KEYS } from './rescoreTable';
@@ -67,7 +68,8 @@ interface PageInput {
 
 export interface PageAssets {
   scripts: string[];
-  styles: string[];
+  /** Inlined, so a page needs no render-blocking request. */
+  css: string;
 }
 
 export type Scored = PlayerSeason & { ppr: number; half: number; standard: number; ppg: number };
@@ -169,7 +171,7 @@ function scoringBar(table: boolean) {
   const note = table
     ? '<p class="note" data-scoring-note hidden>Your Score uses your settings and reranks only the players listed here. The <a href="/">stats explorer</a> ranks everyone.</p>'
     : '';
-  return `<div class="scoring-bar"><p>Default scoring is PPR, half-PPR, and standard. Change it to match your league.</p><button type="button" data-scoring-open hidden>Scoring Settings</button>${note}</div>`;
+  return `<div class="scoring-bar"><p>Default scoring is PPR, half-PPR, and standard. Change it to match your league.</p><button type="button" data-scoring-open>Scoring Settings</button>${note}</div>`;
 }
 
 function renderPage(data: SeoData, assets: PageAssets, input: PageInput): SeoPage {
@@ -221,9 +223,7 @@ function renderPage(data: SeoData, assets: PageAssets, input: PageInput): SeoPag
 <meta name="theme-color" content="#0f766e" />
 <link rel="canonical" href="${url}" />
 <link rel="icon" type="image/svg+xml" href="/football.svg" />
-${assets.styles.map((href) => `<link rel="stylesheet" href="/${href}" />`).join('\n')}
-<link rel="stylesheet" href="/pages.css" />
-<link rel="stylesheet" href="/footer.css" />
+<style>${assets.css}</style>
 ${scoring === 'none' ? '' : assets.scripts.map((src) => `<script type="module" src="/${src}"></script>`).join('\n')}
 <meta property="og:type" content="website" />
 <meta property="og:title" content="${escapeHtml(title)}" />
@@ -693,7 +693,7 @@ function dataPage(data: SeoData, assets: PageAssets): SeoPage {
   });
 }
 
-export function buildPages(data: SeoData, assets: PageAssets = { scripts: [], styles: [] }): SeoPage[] {
+export function buildPages(data: SeoData, assets: PageAssets = { scripts: [], css: '' }): SeoPage[] {
   const { startYear, endYear, weeklySeasons } = data.meta;
   const pages = [dataPage(data, assets), explorePage(data, assets), seasonsIndex(data, assets), methodologyPage(data, assets), allTimePage(data, assets), careerPage(data, assets)];
 
@@ -767,6 +767,34 @@ function miniTable(title: string, rows: Scored[]) {
   );
 }
 
+/**
+ * The default table rows for the homepage, so it renders without the full data
+ * file. Every build recreates this, so it follows each data update.
+ */
+export function defaultViewScript(data: SeoData): string {
+  const rows = JSON.stringify(buildDefaultRows(data.rows)).replace(/</g, '\\u003c');
+  return `<script id="default-view" type="application/json">${rows}</script>`;
+}
+
+/** The homepage header. It sits outside React, so it paints once and never re-renders. */
+export function homepageHeader(data: SeoData): string {
+  const { startYear, endYear, weeklySeasons } = data.meta;
+  const years = endYear - startYear + 1;
+  const latestWeek = weeklySeasons[endYear]?.at(-1)?.week;
+
+  return (
+    `<header class="bg-emerald-800 text-white py-6 px-4">` +
+    `<div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"><div>` +
+    `<h1 class="text-2xl md:text-3xl font-bold">Historical Fantasy Football Stats</h1>` +
+    `<p class="text-emerald-200 text-sm mt-1">${startYear}-${endYear}${latestWeek ? ` · ${endYear} through Week ${latestWeek}` : ''}</p>` +
+    `<p class="text-emerald-100/80 text-sm mt-3 max-w-2xl">Compare fantasy football performance across ${years} years of ` +
+    `data. Filter by position and year, customize your league's scoring settings, and discover the greatest fantasy ` +
+    `seasons of all time.</p></div>` +
+    `<a href="/explore" class="self-start sm:self-center shrink-0 px-4 py-2 text-sm font-medium text-white border border-white/40 rounded-lg hover:bg-white/10 transition-colors">Explore all pages →</a>` +
+    `</div></header>`
+  );
+}
+
 /** Real content for the initial homepage HTML. React replaces it on load. */
 export function homepageContent(data: SeoData): string {
   const { startYear, endYear } = data.meta;
@@ -775,8 +803,8 @@ export function homepageContent(data: SeoData): string {
     .join('');
 
   return (
-    `<main style="max-width:56rem;margin:0 auto;padding:1.5rem 1rem">` +
-    `<h1>Historical Fantasy Football Stats</h1>` +
+    `<div class="bg-white border-b border-gray-200 h-[223px] sm:h-[91px]"></div>` +
+    `<main class="max-w-7xl mx-auto px-4 py-6 min-h-screen">` +
     `<p>Compare historical fantasy football data from ${startYear}-${endYear}. Rank every QB, RB, WR, ` +
     `and TE season with PPR, half-PPR, standard, or your own custom scoring, or ` +
     `<a href="/data">download the data</a>.</p>` +

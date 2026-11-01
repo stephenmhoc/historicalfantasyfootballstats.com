@@ -6,7 +6,7 @@ import { cloudflare } from '@cloudflare/vite-plugin'
 import dataMeta from './src/generated/dataMeta.json'
 import { buildCsvFiles } from './src/seo/csv'
 import { siteFooter } from './src/seo/footer'
-import { buildLlmsTxt, buildPages, buildSitemap, homepageContent, type SeoData } from './src/seo/pages'
+import { buildLlmsTxt, buildPages, buildSitemap, defaultViewScript, homepageContent, homepageHeader, type SeoData } from './src/seo/pages'
 
 // Substituted into index.html, so the page metadata follows the data.
 process.env.VITE_DATA_RANGE = `${dataMeta.startYear}-${dataMeta.endYear}`
@@ -22,24 +22,31 @@ function loadSeoData(): SeoData {
   }
 }
 
+const FOOTER_CSS_LINK = '<link rel="stylesheet" href="/footer.css" />'
+
+function inlineFooterCss(html: string) {
+  return html.replace(FOOTER_CSS_LINK, `<style>${readFileSync('public/footer.css', 'utf8')}</style>`)
+}
+
 /** Generates the crawlable pages from the same data and scoring as the site. */
 function seoPages(): Plugin {
   return {
     name: 'seo-pages',
     enforce: 'post',
     transformIndexHtml(html) {
-      return html.replace('<!--static-content-->', homepageContent(loadSeoData()))
+      const data = loadSeoData()
+      return html
+        .replace('<!--static-header-->', homepageHeader(data))
+        .replace('<!--static-content-->', homepageContent(data))
+        .replace('<!--default-view-->', defaultViewScript(data))
     },
     generateBundle(_, bundle) {
       if (this.environment.name !== 'client') return
 
-      const widget = Object.values(bundle).find((file) => file.type === 'chunk' && file.name === 'scoring')
-      if (widget?.type !== 'chunk') throw new Error('The scoring widget was not built')
-      // The stylesheet lands on a chunk shared with the homepage, so look through imports too.
-      const chunks = [widget, ...widget.imports.map((name) => bundle[name])]
-      const styles = chunks.flatMap((file) => (file.type === 'chunk' ? [...(file.viteMetadata?.importedCss ?? [])] : []))
-      if (styles.length === 0) throw new Error('The scoring widget has no stylesheet')
-      const assets = { scripts: [widget.fileName], styles }
+      const loader = Object.values(bundle).find((file) => file.type === 'chunk' && file.name === 'scoring')
+      if (loader?.type !== 'chunk') throw new Error('The scoring loader was not built')
+      const footerCss = readFileSync('public/footer.css', 'utf8')
+      const assets = { scripts: [loader.fileName], css: readFileSync('public/pages.css', 'utf8') + footerCss }
 
       const data = loadSeoData()
       const pages = buildPages(data, assets)
@@ -52,8 +59,20 @@ function seoPages(): Plugin {
 
       // Written over the copies from public/, so these share the footer too.
       for (const file of ['mcp.html', '404.html']) {
-        emit(file, readFileSync(`public/${file}`, 'utf8').replace('<!--site-footer-->', siteFooter(data.meta.endYear)))
+        emit(file, inlineFooterCss(readFileSync(`public/${file}`, 'utf8')).replace('<!--site-footer-->', siteFooter(data.meta.endYear)))
       }
+
+      // Inlined so the homepage text paints without waiting on a stylesheet.
+      const home = bundle['index.html']
+      if (home?.type !== 'asset') throw new Error('index.html was not built')
+      home.source = inlineFooterCss(String(home.source)).replace(
+        /<link rel="stylesheet"[^>]*href="\/(assets\/[^"]+\.css)"[^>]*>/,
+        (_, name) => {
+          const css = bundle[name]
+          if (css?.type !== 'asset') throw new Error(`${name} was not built`)
+          return `<style>${css.source}</style>`
+        },
+      )
     },
   }
 }
@@ -63,8 +82,9 @@ export default defineConfig({
   environments: {
     client: {
       build: {
+        target: 'es2022',
         rollupOptions: {
-          input: { main: 'index.html', scoring: 'src/seo/scoringWidget.tsx' },
+          input: { main: 'index.html', scoring: 'src/seo/scoringLoader.ts' },
         },
       },
     },

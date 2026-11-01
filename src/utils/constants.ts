@@ -14,6 +14,9 @@ export const DEFAULT_SCORING: ScoringConfig = {
   fumbleLost: -2,
 };
 
+export const DEFAULT_POSITION: PositionFilter = 'All';
+export const DEFAULT_YEAR: YearFilter = 'Last36';
+
 export const POSITIONS: PositionFilter[] = ['All', 'QB', 'RB', 'WR', 'TE'];
 
 export const DATA_START_YEAR = dataMeta.startYear;

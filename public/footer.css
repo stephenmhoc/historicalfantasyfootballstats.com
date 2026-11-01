@@ -21,6 +21,13 @@
 .site-footer a:hover {
   text-decoration: underline;
 }
+.site-footer p a {
+  text-decoration: underline;
+}
+.site-footer li a {
+  display: inline-block;
+  padding: 2px 0;
+}
 .site-footer-brand > a {
   color: #111827;
   font-weight: 600;
@@ -48,6 +55,7 @@
 }
 .site-footer-icons a {
   display: block;
+  padding: 2px;
   color: #4b5563;
 }
 .site-footer-icons a:hover {
