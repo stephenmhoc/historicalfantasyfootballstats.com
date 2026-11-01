@@ -121,6 +121,16 @@ describe('buildPages', () => {
     expect(csv).toContain('"Odell ""OBJ"" Beckham, Jr."');
   });
 
+  it('opens links to other sites in a new tab', () => {
+    const sources = [...pages.map((p) => p.html), fs.readFileSync(path.join(DATA_DIR, '..', 'mcp.html'), 'utf8')];
+    for (const html of sources) {
+      for (const [link] of html.matchAll(/<a [^>]*href="https?:[^>]*>/g)) {
+        expect(link).toContain('target="_blank"');
+        expect(link).toContain('rel="noopener noreferrer"');
+      }
+    }
+  });
+
   it('points AI engines at the key pages', () => {
     const llms = buildLlmsTxt(data);
     expect(llms).toContain(`/seasons/${meta.endYear})`);
