@@ -101,7 +101,7 @@ Its docs page is `public/mcp.html`, served when a browser or crawler requests `/
 
 ## SEO Pages
 
-The build generates a static page for every season, recent position leaders, weekly leaders, all-time and career lists, plus `sitemap.xml` and `llms.txt` (`src/seo/pages.ts`). They use the same data and scoring as the site, so the daily update refreshes them.
+The build generates a static page for every season, recent position leaders, weekly leaders, all-time and career lists, plus `sitemap.xml` and `llms.txt` (`src/seo/pages.ts`). Generated pages load the same scoring modal as the homepage through a small script (`src/seo/scoringWidget.tsx`). They use the same data and scoring as the site, so the daily update refreshes them.
 
 ## Data Sources
 

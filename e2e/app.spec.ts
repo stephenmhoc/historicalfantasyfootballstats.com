@@ -201,6 +201,27 @@ test.describe('Historical Fantasy Football Stats', () => {
     await expect(points).toHaveText(changed!);
   });
 
+  test('leads the year list with the two newest seasons', async ({ page }) => {
+    await page.goto('/');
+    const options = await page.getByLabel('Year').locator('option').allTextContents();
+    const newest = Number(options[0]);
+
+    expect(options[1]).toBe(String(newest - 1));
+    expect(new Set(options).size).toBe(options.length);
+  });
+
+  test('format buttons set reception scoring', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Scoring Settings' }).click();
+    await page.getByRole('button', { name: 'Half-PPR' }).click();
+    await expect(page.getByLabel('Points per Reception')).toHaveValue('0.5');
+  });
+
+  test('links to the explore page', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByRole('link', { name: /Explore all pages/ })).toHaveAttribute('href', '/explore');
+  });
+
   test('columns can be sorted from the keyboard', async ({ page }) => {
     await page.goto('/');
     await expect(page.getByText('Loading data...')).toBeHidden({ timeout: 10000 });

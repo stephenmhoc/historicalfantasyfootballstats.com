@@ -1,6 +1,8 @@
 import type { PlayerSeason, Position, WeekSummary } from '../types';
 import { calculateFantasyPoints } from '../utils/calculations';
 import { DEFAULT_SCORING } from '../utils/constants';
+import { aboutLinks, siteFooter, statsLinks } from './footer';
+import { STAT_KEYS } from './rescoreTable';
 
 const SITE = 'https://historicalfantasyfootballstats.com';
 const SITE_NAME = 'Historical Fantasy Football Stats';
@@ -58,6 +60,13 @@ interface PageInput {
   faqs?: Faq[];
   live?: boolean;
   schema?: object[];
+  /** 'table' rescoring, 'modal' settings only, or 'none' where no numbers are shown. */
+  scoring?: 'table' | 'modal' | 'none';
+}
+
+export interface PageAssets {
+  scripts: string[];
+  styles: string[];
 }
 
 type Scored = PlayerSeason & { ppr: number; half: number; standard: number; ppg: number };
@@ -121,12 +130,13 @@ function statsTable(caption: string, rows: Scored[], position: Position | 'All',
         points(row.ppg),
         ...columns.map(([, key]) => row[key]),
       ];
-      return `<tr>${cells.map((cell) => `<td>${cell}</td>`).join('')}</tr>`;
+      const stats = STAT_KEYS.map((key) => row[key]).join(',');
+      return `<tr data-rank="${index + 1}" data-stats="${stats}">${cells.map((cell) => `<td>${cell}</td>`).join('')}</tr>`;
     })
     .join('');
 
   return (
-    `<div class="table"><table><caption>${escapeHtml(caption)}</caption><thead><tr>` +
+    `<div class="table"><table data-rescorable><caption>${escapeHtml(caption)}</caption><thead><tr>` +
     headings.map((heading) => `<th scope="col">${heading}</th>`).join('') +
     `</tr></thead><tbody>${body}</tbody></table></div>`
   );
@@ -148,19 +158,15 @@ function faqSection(faqs: Faq[]) {
 const jsonLd = (value: object) =>
   `<script type="application/ld+json">${JSON.stringify(value).replace(/</g, '\\u003c')}</script>`;
 
-export function siteLinks(meta: SeoData['meta']): Crumb[] {
-  return [
-    { name: `${meta.endYear} Fantasy Leaders`, path: `/seasons/${meta.endYear}` },
-    { name: 'Best Seasons of All Time', path: '/all-time' },
-    { name: 'Career Leaders', path: '/career-leaders' },
-    { name: 'All Seasons', path: '/seasons' },
-    { name: 'How Scoring Works', path: '/methodology' },
-    { name: 'MCP Server', path: '/mcp' },
-  ];
+function scoringBar(table: boolean) {
+  const note = table
+    ? '<p class="note" data-scoring-note hidden>Your Score uses your settings and reranks only the players listed here. The <a href="/">stats explorer</a> ranks everyone.</p>'
+    : '';
+  return `<div class="scoring-bar"><p>Default scoring is PPR, half-PPR, and standard. Change it to match your league.</p><button type="button" data-scoring-open hidden>Scoring Settings</button>${note}</div>`;
 }
 
-function renderPage(data: SeoData, input: PageInput): SeoPage {
-  const { path, title, description, heading, answer, crumbs, sections, faqs = [], live = false, schema = [] } = input;
+function renderPage(data: SeoData, assets: PageAssets, input: PageInput): SeoPage {
+  const { path, title, description, heading, answer, crumbs, sections, faqs = [], live = false, schema = [], scoring = 'table' } = input;
   const url = `${SITE}${path}`;
   const updated = data.meta.updatedAt?.slice(0, 10);
   const updatedLabel = updated
@@ -208,7 +214,10 @@ function renderPage(data: SeoData, input: PageInput): SeoPage {
 <meta name="theme-color" content="#0f766e" />
 <link rel="canonical" href="${url}" />
 <link rel="icon" type="image/svg+xml" href="/football.svg" />
+${assets.styles.map((href) => `<link rel="stylesheet" href="/${href}" />`).join('\n')}
 <link rel="stylesheet" href="/pages.css" />
+<link rel="stylesheet" href="/footer.css" />
+${scoring === 'none' ? '' : assets.scripts.map((src) => `<script type="module" src="/${src}"></script>`).join('\n')}
 <meta property="og:type" content="website" />
 <meta property="og:title" content="${escapeHtml(title)}" />
 <meta property="og:description" content="${escapeHtml(description)}" />
@@ -220,20 +229,16 @@ function renderPage(data: SeoData, input: PageInput): SeoPage {
 ${structured.map(jsonLd).join('\n')}
 </head>
 <body>
-<header><div class="wrap"><nav aria-label="Site"><ul>${[{ name: 'Stats Explorer', path: '/' }, ...siteLinks(data.meta).slice(0, 4)]
-    .map(({ name, path: href }) => `<li><a href="${href}">${escapeHtml(name)}</a></li>`)
-    .join('')}</ul></nav></div></header>
+<header><div class="wrap site-header"><a class="brand" href="/">${SITE_NAME}</a><a class="explore" href="/explore">Explore all pages</a></div></header>
 <main class="wrap">
 <p class="breadcrumb">${breadcrumb}</p>
 <h1>${escapeHtml(heading)}</h1>
 <p class="answer">${escapeHtml(answer)}</p>
 ${live && updatedLabel && updated ? `<p class="updated">Updated <time datetime="${updated}">${updatedLabel}</time></p>` : ''}
+${scoring === 'none' ? '' : scoringBar(scoring === 'table')}
 ${[...sections, ...(faqs.length ? [faqSection(faqs)] : [])].join('\n')}
 </main>
-<footer><div class="wrap">
-${linkList(siteLinks(data.meta))}
-<p>Data from <a href="https://www.pro-football-reference.com/">Pro Football Reference</a> and <a href="https://github.com/nflverse/nflverse-data">nflverse</a>. Regular season only. <a href="/">Customize the scoring</a>.</p>
-</div></footer>
+${siteFooter(data.meta.endYear)}
 </body>
 </html>
 `;
@@ -275,7 +280,7 @@ function seasonStatus(data: SeoData, year: number): SeasonStatus {
   return finished ? { inProgress: false, label: 'final' } : { inProgress: true, label: `through Week ${week.week}`, week };
 }
 
-function seasonPage(data: SeoData, year: number): SeoPage {
+function seasonPage(data: SeoData, assets: PageAssets, year: number): SeoPage {
   const ranked = rank(data.rows.filter((row) => row.year === year));
   const [top] = ranked;
   const status = seasonStatus(data, year);
@@ -320,7 +325,7 @@ function seasonPage(data: SeoData, year: number): SeoPage {
 
   const description = `${year} fantasy football leaders ${status.inProgress ? status.label : 'and final rankings'}: ${top.player} ${status.inProgress ? 'leads' : 'led'} with ${points(top.ppr)} PPR points. PPR, half-PPR, and standard stats for every position.`;
 
-  return renderPage(data, {
+  return renderPage(data, assets, {
     path: `/seasons/${year}`,
     title,
     description,
@@ -334,7 +339,7 @@ function seasonPage(data: SeoData, year: number): SeoPage {
   });
 }
 
-function seasonPositionPage(data: SeoData, year: number, position: Position): SeoPage {
+function seasonPositionPage(data: SeoData, assets: PageAssets, year: number, position: Position): SeoPage {
   const ranked = rank(data.rows.filter((row) => row.year === year && row.position === position));
   const [top] = ranked;
   const status = seasonStatus(data, year);
@@ -345,7 +350,7 @@ function seasonPositionPage(data: SeoData, year: number, position: Position): Se
   const answer = `${identity(top)} ${verb} ${year} fantasy ${name.toLowerCase()}s ${status.inProgress ? status.label : ''} with ${points(top.ppr)} PPR points in ${top.games} games. ${topThree(ranked)}`.replace('  ', ' ');
   const description = `${year} fantasy ${name.toLowerCase()} rankings ${status.inProgress ? status.label : ''}: ${top.player} ${verb} with ${points(top.ppr)} PPR points. See PPR, half-PPR, and standard stats.`.replace('  ', ' ');
 
-  return renderPage(data, {
+  return renderPage(data, assets, {
     path,
     title: `${year} Fantasy ${position} Leaders: ${name} Rankings${status.inProgress ? ` Through Week ${status.week!.week}` : ''}`,
     description,
@@ -376,7 +381,7 @@ function seasonPositionPage(data: SeoData, year: number, position: Position): Se
   });
 }
 
-function weekPage(data: SeoData, year: number, summary: WeekSummary): SeoPage {
+function weekPage(data: SeoData, assets: PageAssets, year: number, summary: WeekSummary): SeoPage {
   const { week, gamesPlayed, gamesScheduled } = summary;
   const ranked = rank(data.weekly.filter((row) => row.year === year && row.week === week));
   const [top] = ranked;
@@ -386,7 +391,7 @@ function weekPage(data: SeoData, year: number, summary: WeekSummary): SeoPage {
   const answer = `${identity(top)} ${incomplete ? 'leads' : 'led'} Week ${week} of the ${year} NFL season${scope} with ${points(top.ppr)} PPR points against ${top.opponent}. ${topThree(ranked)}`;
   const description = `${year} Week ${week} fantasy football leaders${scope}: ${top.player} scored ${points(top.ppr)} PPR points. See every top performance with PPR, half-PPR, and standard points.`;
 
-  return renderPage(data, {
+  return renderPage(data, assets, {
     path,
     title: `${year} Week ${week} Fantasy Football Leaders and Top Scorers`,
     description,
@@ -415,7 +420,7 @@ function weekPage(data: SeoData, year: number, summary: WeekSummary): SeoPage {
   });
 }
 
-function allTimePage(data: SeoData, position?: Position): SeoPage {
+function allTimePage(data: SeoData, assets: PageAssets, position?: Position): SeoPage {
   const ranked = rank(position ? data.rows.filter((row) => row.position === position) : data.rows);
   const [top] = ranked;
   const label = position ? `${POSITION_NAMES[position]} ` : '';
@@ -426,7 +431,7 @@ function allTimePage(data: SeoData, position?: Position): SeoPage {
   const crumbs = [{ name: 'Home', path: '/' }, { name: 'All-Time', path: '/all-time' }];
   if (position) crumbs.push({ name: position, path });
 
-  return renderPage(data, {
+  return renderPage(data, assets, {
     path,
     title: `Best Fantasy ${position ? `${position} ` : 'Football '}Seasons of All Time (${range})`,
     description,
@@ -474,7 +479,7 @@ function careerTotals(rows: PlayerSeason[]) {
   return [...totals.values()];
 }
 
-function careerPage(data: SeoData, position?: Position): SeoPage {
+function careerPage(data: SeoData, assets: PageAssets, position?: Position): SeoPage {
   const careers = careerTotals(position ? data.rows.filter((row) => row.position === position) : data.rows);
   const ranked = rank(careers);
   const [top] = ranked;
@@ -485,7 +490,7 @@ function careerPage(data: SeoData, position?: Position): SeoPage {
   const crumbs = [{ name: 'Home', path: '/' }, { name: 'Career Leaders', path: '/career-leaders' }];
   if (position) crumbs.push({ name: position, path });
 
-  return renderPage(data, {
+  return renderPage(data, assets, {
     path,
     title: `All-Time Fantasy ${position ? `${position} ` : 'Football '}Career Leaders: Most Points Ever`,
     description,
@@ -514,11 +519,11 @@ function careerPage(data: SeoData, position?: Position): SeoPage {
   });
 }
 
-function seasonsIndex(data: SeoData): SeoPage {
+function seasonsIndex(data: SeoData, assets: PageAssets): SeoPage {
   const years: number[] = [];
   for (let year = data.meta.endYear; year >= data.meta.startYear; year--) years.push(year);
 
-  return renderPage(data, {
+  return renderPage(data, assets, {
     path: '/seasons',
     title: `NFL Fantasy Football Stats by Season (${data.meta.startYear}-${data.meta.endYear})`,
     description: `Fantasy football leaders for every NFL season from ${data.meta.startYear} to ${data.meta.endYear}, with PPR, half-PPR, and standard points.`,
@@ -526,19 +531,21 @@ function seasonsIndex(data: SeoData): SeoPage {
     answer: `This site covers every NFL season from ${data.meta.startYear} through ${data.meta.endYear}, with fantasy points for every quarterback, running back, wide receiver, and tight end.`,
     crumbs: [{ name: 'Home', path: '/' }, { name: 'Seasons', path: '/seasons' }],
     sections: [section('All seasons', linkList(years.map((year) => ({ name: String(year), path: `/seasons/${year}` }))))],
+    scoring: 'none',
   });
 }
 
-function methodologyPage(data: SeoData): SeoPage {
+function methodologyPage(data: SeoData, assets: PageAssets): SeoPage {
   const { startYear, endYear } = data.meta;
 
-  return renderPage(data, {
+  return renderPage(data, assets, {
     path: '/methodology',
     title: 'How Fantasy Points Are Calculated: Scoring and Data Sources',
     description: 'How this site calculates PPR, half-PPR, and standard fantasy points, where the NFL stats come from, how often they update, and what the known limits are.',
     heading: 'How Scoring and Data Work',
     answer: `Fantasy points on this site are calculated from regular-season NFL stats for quarterbacks, running backs, wide receivers, and tight ends from ${startYear} through ${endYear}, using one set of scoring rules for every era.`,
     crumbs: [{ name: 'Home', path: '/' }, { name: 'How Scoring Works', path: '/methodology' }],
+    scoring: 'modal',
     sections: [
       section(
         'Scoring rules',
@@ -571,20 +578,52 @@ function methodologyPage(data: SeoData): SeoPage {
   });
 }
 
-export function buildPages(data: SeoData): SeoPage[] {
+function explorePage(data: SeoData, assets: PageAssets): SeoPage {
   const { startYear, endYear, weeklySeasons } = data.meta;
-  const pages = [seasonsIndex(data), methodologyPage(data), allTimePage(data), careerPage(data)];
+  const weeks = weeklySeasons[endYear] ?? [];
+  const byPosition = (root: string, label: (position: Position) => string) =>
+    POSITIONS.map((position) => ({ name: label(position), path: `${root}/${position.toLowerCase()}` }));
+  const decades: Crumb[] = [];
+  for (let decade = Math.floor(endYear / 10) * 10; decade >= Math.floor(startYear / 10) * 10; decade -= 10) {
+    for (let year = Math.min(decade + 9, endYear); year >= Math.max(decade, startYear); year--) {
+      decades.push({ name: String(year), path: `/seasons/${year}` });
+    }
+  }
+
+  return renderPage(data, assets, {
+    path: '/explore',
+    title: 'Explore Fantasy Football Stats: Every Leaderboard',
+    description: `Every fantasy football leaderboard on this site in one place: the ${endYear} season, weekly leaders, the best seasons ever, career leaders, and every year since ${startYear}.`,
+    heading: 'Explore Fantasy Football Stats',
+    answer: `Every leaderboard on this site, from the ${endYear} season back to ${startYear}.`,
+    crumbs: [{ name: 'Home', path: '/' }, { name: 'Explore', path: '/explore' }],
+    sections: [
+      section(`${endYear} season`, linkList([{ name: `${endYear} leaders`, path: `/seasons/${endYear}` }, ...byPosition(`/seasons/${endYear}`, (p) => `${endYear} ${p} leaders`)])),
+      ...(weeks.length ? [section(`${endYear} weekly leaders`, linkList(weeks.map(({ week }) => ({ name: `Week ${week}`, path: `/seasons/${endYear}/week/${week}` }))))] : []),
+      section('Best seasons of all time', linkList([{ name: 'All positions', path: '/all-time' }, ...byPosition('/all-time', (p) => `Best ${p} seasons`)])),
+      section('Career leaders', linkList([{ name: 'All positions', path: '/career-leaders' }, ...byPosition('/career-leaders', (p) => `${p} career leaders`)])),
+      section('Every season', linkList(decades)),
+      section('Tools and guides', linkList([{ name: 'Stats explorer', path: '/' }, ...aboutLinks.filter(({ path }) => path !== '/explore')])),
+    ],
+    live: true,
+    scoring: 'none',
+  });
+}
+
+export function buildPages(data: SeoData, assets: PageAssets = { scripts: [], styles: [] }): SeoPage[] {
+  const { startYear, endYear, weeklySeasons } = data.meta;
+  const pages = [explorePage(data, assets), seasonsIndex(data, assets), methodologyPage(data, assets), allTimePage(data, assets), careerPage(data, assets)];
 
   for (const position of POSITIONS) {
-    pages.push(allTimePage(data, position), careerPage(data, position));
+    pages.push(allTimePage(data, assets, position), careerPage(data, assets, position));
   }
 
   for (let year = endYear; year >= startYear; year--) {
-    pages.push(seasonPage(data, year));
+    pages.push(seasonPage(data, assets, year));
     if (year >= POSITION_PAGES_START_YEAR) {
-      for (const position of POSITIONS) pages.push(seasonPositionPage(data, year, position));
+      for (const position of POSITIONS) pages.push(seasonPositionPage(data, assets, year, position));
     }
-    for (const summary of weeklySeasons[year] ?? []) pages.push(weekPage(data, year, summary));
+    for (const summary of weeklySeasons[year] ?? []) pages.push(weekPage(data, assets, year, summary));
   }
 
   return pages;
@@ -617,6 +656,7 @@ ${[
   line({ name: `${endYear} Fantasy Leaders`, path: `/seasons/${endYear}` }, 'current season leaders, with weekly and position pages'),
   line({ name: 'Best Seasons of All Time', path: '/all-time' }, 'top single seasons overall and by position'),
   line({ name: 'Career Leaders', path: '/career-leaders' }, 'most career fantasy points overall and by position'),
+  line({ name: 'Explore', path: '/explore' }, 'an index of every leaderboard on the site'),
   line({ name: 'All Seasons', path: '/seasons' }, `an index of every season since ${startYear}`),
   line({ name: 'How Scoring Works', path: '/methodology' }, 'scoring rules, data sources, and limits'),
 ].join('\n')}
@@ -645,7 +685,7 @@ function miniTable(title: string, rows: Scored[]) {
 /** Real content for the initial homepage HTML. React replaces it on load. */
 export function homepageContent(data: SeoData): string {
   const { startYear, endYear } = data.meta;
-  const links = siteLinks(data.meta)
+  const links = [...statsLinks(endYear), ...aboutLinks]
     .map(({ name, path }) => `<li><a href="${path}">${escapeHtml(name)}</a></li>`)
     .join('');
 
