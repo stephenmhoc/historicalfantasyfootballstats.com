@@ -3,7 +3,7 @@ import { calculateFantasyPoints } from '../utils/calculations';
 import { DEFAULT_SCORING } from '../utils/constants';
 import { buildDefaultRows } from '../utils/view';
 import { CSV_FIELDS } from './csv';
-import { aboutLinks, siteFooter, statsLinks } from './footer';
+import { aboutLinks, siteFooter } from './footer';
 import { STAT_KEYS } from './rescoreTable';
 
 const SITE = 'https://historicalfantasyfootballstats.com';
@@ -74,7 +74,7 @@ export interface PageAssets {
 
 export type Scored = PlayerSeason & { ppr: number; half: number; standard: number; ppg: number };
 
-const escapeHtml = (text: string) =>
+export const escapeHtml = (text: string) =>
   text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 const scoreWith = (row: PlayerSeason, reception: number) =>
@@ -91,7 +91,7 @@ export function scored(row: PlayerSeason): Scored {
   };
 }
 
-const rank = (rows: PlayerSeason[]) => rows.map(scored).sort((a, b) => b.ppr - a.ppr);
+export const rank = (rows: PlayerSeason[]) => rows.map(scored).sort((a, b) => b.ppr - a.ppr);
 const points = (value: number) => value.toFixed(1);
 const realTeam = (row: PlayerSeason) => (row.team.endsWith('TM') ? null : row.team);
 
@@ -754,7 +754,7 @@ ${[
 `;
 }
 
-function miniTable(title: string, rows: Scored[]) {
+export function miniTable(title: string, rows: Scored[]) {
   const body = rows
     .map((row, index) =>
       `<tr><td>${index + 1}</td><td>${escapeHtml(row.player)}</td><td>${row.position}</td><td>${row.year}</td><td><strong>${points(row.ppr)}</strong></td></tr>`
@@ -792,24 +792,5 @@ export function homepageHeader(data: SeoData): string {
     `seasons of all time.</p></div>` +
     `<a href="/explore" class="self-start sm:self-center shrink-0 px-4 py-2 text-sm font-medium text-white border border-white/40 rounded-lg hover:bg-white/10 transition-colors">Explore all pages →</a>` +
     `</div></header>`
-  );
-}
-
-/** Real content for the initial homepage HTML. React replaces it on load. */
-export function homepageContent(data: SeoData): string {
-  const { startYear, endYear } = data.meta;
-  const links = [...statsLinks(endYear), ...aboutLinks]
-    .map(({ name, path }) => `<li><a href="${path}">${escapeHtml(name)}</a></li>`)
-    .join('');
-
-  return (
-    `<div class="bg-white border-b border-gray-200 h-[223px] sm:h-[91px]"></div>` +
-    `<main class="max-w-7xl mx-auto px-4 py-6 min-h-screen">` +
-    `<p>Compare historical fantasy football data from ${startYear}-${endYear}. Rank every QB, RB, WR, ` +
-    `and TE season with PPR, half-PPR, standard, or your own custom scoring, or ` +
-    `<a href="/data">download the data</a>.</p>` +
-    miniTable(`${endYear} Fantasy Football Leaders`, rank(data.rows.filter((row) => row.year === endYear)).slice(0, 10)) +
-    miniTable('Best Fantasy Seasons of All Time', rank(data.rows).slice(0, 10)) +
-    `<ul>${links}</ul></main>`
   );
 }

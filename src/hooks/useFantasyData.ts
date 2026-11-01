@@ -8,7 +8,7 @@ import { computeView, isDefaultScoring } from '../utils/view';
 
 /** The default view, which the build puts in the homepage HTML. */
 function readPrebuiltRows(): PlayerSeason[] | null {
-  const script = document.getElementById('default-view');
+  const script = typeof document === 'undefined' ? null : document.getElementById('default-view');
   if (!script?.textContent) return null;
 
   try {

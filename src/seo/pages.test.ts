@@ -6,8 +6,9 @@ import { buildCsvFiles, toCsv } from './csv';
 import { MAX_RESULTS } from '../utils/constants';
 import { DEFAULT_VIEW, buildDefaultRows, computeView } from '../utils/view';
 import { siteFooter } from './footer';
+import { homepageContent } from './homepage';
 import { STAT_KEYS } from './rescoreTable';
-import { buildLlmsTxt, buildPages, buildSitemap, homepageContent, type SeoData, type SeoPage } from './pages';
+import { buildLlmsTxt, buildPages, buildSitemap, type SeoData, type SeoPage } from './pages';
 
 const DATA_DIR = path.join(__dirname, '..', '..', 'public', 'data');
 const read = (file: string) => JSON.parse(fs.readFileSync(path.join(DATA_DIR, file), 'utf8'));
@@ -138,6 +139,14 @@ describe('buildPages', () => {
     expect(prebuilt.length).toBe(MAX_RESULTS);
     expect(computeView(prebuilt, DEFAULT_VIEW)).toEqual(computeView(data.rows, DEFAULT_VIEW));
     expect(prebuilt[0]).not.toHaveProperty('fantasyPoints');
+  });
+
+  it('prerenders the real homepage table and filter bar', () => {
+    const html = homepageContent(data);
+    expect(html).toContain('Fantasy Pts');
+    expect(html).toContain('Scoring Settings');
+    expect(html).toContain('Showing 500 results');
+    expect(html).toContain('481.1');
   });
 
   it('points AI engines at the key pages', () => {
