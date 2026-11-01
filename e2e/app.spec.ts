@@ -62,8 +62,7 @@ test.describe('Historical Fantasy Football Stats', () => {
     await expect(page.getByRole('heading', { name: 'Scoring Settings' })).toBeVisible();
 
     // Get the PPR input by finding the label and its adjacent input
-    const pprLabel = page.getByText('Points per Reception');
-    const pprInput = pprLabel.locator('..').locator('input');
+    const pprInput = page.getByLabel('Points per Reception');
 
     // Verify initial value is 1 (full PPR - the default)
     await expect(pprInput).toHaveValue('1');
@@ -83,8 +82,7 @@ test.describe('Historical Fantasy Football Stats', () => {
     await expect(page.getByRole('heading', { name: 'Scoring Settings' })).toBeVisible();
 
     // Verify PPR is still 0.5
-    const pprInputAgain = pprLabel.locator('..').locator('input');
-    await expect(pprInputAgain).toHaveValue('0.5');
+    await expect(page.getByLabel('Points per Reception')).toHaveValue('0.5');
 
     // Close modal
     await page.getByRole('button', { name: 'Cancel' }).click();
@@ -111,7 +109,7 @@ test.describe('Historical Fantasy Football Stats', () => {
     await expect(page.getByRole('columnheader', { name: 'Fantasy Pts' })).toBeVisible();
 
     // Check that position dropdown is present
-    await expect(page.locator('select').first()).toBeVisible();
+    await expect(page.getByLabel('Position')).toBeVisible();
 
     // Check that scoring settings button is present
     await expect(page.getByRole('button', { name: 'Scoring Settings' })).toBeVisible();
@@ -125,9 +123,84 @@ test.describe('Historical Fantasy Football Stats', () => {
     await expect(page.getByRole('heading', { name: 'Scoring Settings' })).toBeHidden();
 
     // Filter by position (QB)
-    await page.locator('select').first().selectOption('QB');
+    await page.getByLabel('Position').selectOption('QB');
 
     // Verify table still has data and shows QB-specific columns
     await expect(page.getByRole('columnheader', { name: 'Pass Yds' })).toBeVisible();
+  });
+
+  test('shows a single week of the live season', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText('Loading data...')).toBeHidden({ timeout: 10000 });
+
+    // Weekly data exists only for live seasons, so the filter starts hidden
+    await expect(page.getByLabel('Week')).toHaveCount(0);
+
+    const yearSelect = page.getByLabel('Year');
+    const season = await yearSelect.locator('option').filter({ hasText: /^\d{4}$/ }).first().getAttribute('value');
+    await yearSelect.selectOption(season!);
+
+    const weekSelect = page.getByLabel('Week');
+    await weekSelect.selectOption('1');
+
+    await expect(page.getByRole('columnheader', { name: 'Opp' })).toBeVisible();
+    await expect(page.locator('tbody tr').first().locator('td').nth(1)).toHaveText('1');
+    await expect(page.locator('tbody tr').first().locator('td').first()).toHaveText('1');
+
+    // Changing the year goes back to full seasons
+    await yearSelect.selectOption(String(Number(season) - 1));
+    await expect(page.getByRole('columnheader', { name: 'Opp' })).toHaveCount(0);
+    await expect(page.getByLabel('Week')).toHaveCount(0);
+  });
+
+  test('moves saved settings off retired year filters', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem(
+        'fantasy-mvp-storage',
+        JSON.stringify({
+          state: { yearFilter: 'Last56', positionFilter: 'All', scoringConfig: { reception: 0.5 } },
+          version: 0,
+        })
+      );
+    });
+    await page.goto('/');
+    await expect(page.getByText('Loading data...')).toBeHidden({ timeout: 10000 });
+
+    await expect(page.getByLabel('Year')).toHaveValue('AllYears');
+    await expect(page.locator('tbody tr').first().locator('td').nth(4)).not.toContainText('NaN');
+  });
+
+  test('scoring accepts typed negatives and survives a reload', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText('Loading data...')).toBeHidden({ timeout: 10000 });
+
+    const points = page.locator('tbody tr').first().locator('td').nth(4);
+    const before = await points.textContent();
+
+    await page.getByRole('button', { name: 'Scoring Settings' }).click();
+    const interception = page.getByLabel('Interception Points');
+    await interception.click();
+    await interception.press('ControlOrMeta+a');
+    await interception.pressSequentially('-1');
+    await expect(interception).toHaveValue('-1');
+
+    await page.getByLabel('Points per Reception').fill('0');
+    await page.getByRole('button', { name: 'Save Changes' }).click();
+    await expect(points).not.toHaveText(before!);
+    const changed = await points.textContent();
+
+    await page.reload();
+    await expect(page.getByText('Loading data...')).toBeHidden({ timeout: 10000 });
+    await expect(points).toHaveText(changed!);
+  });
+
+  test('columns can be sorted from the keyboard', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.getByText('Loading data...')).toBeHidden({ timeout: 10000 });
+
+    const header = page.getByRole('columnheader', { name: 'Player' });
+    await header.getByRole('button').focus();
+    await page.keyboard.press('Enter');
+    await expect(header).toHaveAttribute('aria-sort', /ascending|descending/);
   });
 });

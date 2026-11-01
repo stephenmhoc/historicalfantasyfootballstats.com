@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import Papa from 'papaparse';
 import { fileURLToPath } from 'url';
+import { hasPlayed, roughFantasyPoints } from './lib/nflverse.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,16 +68,22 @@ function processData() {
       }
       return cleaned;
     })
+    .filter(hasPlayed)
     // Sort by year descending, then by a rough fantasy point estimate
     .sort((a, b) => {
       if (b.year !== a.year) return b.year - a.year;
-      // Rough fantasy point estimate for sorting
-      const aPoints = a.passYds / 25 + a.passTD * 4 + a.rushYds / 10 + a.rushTD * 6 + a.recYds / 10 + a.recTD * 6;
-      const bPoints = b.passYds / 25 + b.passTD * 4 + b.rushYds / 10 + b.rushTD * 6 + b.recYds / 10 + b.recTD * 6;
-      return bPoints - aPoints;
+      return roughFantasyPoints(b) - roughFantasyPoints(a);
     });
 
   console.log(`Processed ${processed.length} player-seasons`);
+
+  // Later seasons come from updateData.js and are not in the CSV, so keep them.
+  if (fs.existsSync(OUTPUT_FILE)) {
+    const lastCsvYear = Math.max(...processed.map((row) => row.year));
+    const laterRows = JSON.parse(fs.readFileSync(OUTPUT_FILE, 'utf8')).filter((row) => row.year > lastCsvYear);
+    processed.unshift(...laterRows);
+    console.log(`Kept ${laterRows.length} rows from after ${lastCsvYear}`);
+  }
 
   // Ensure output directory exists
   const outputDir = path.dirname(OUTPUT_FILE);

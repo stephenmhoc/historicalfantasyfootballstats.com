@@ -1,11 +1,29 @@
+import { useShallow } from 'zustand/react/shallow';
 import { Dropdown } from './Dropdown';
 import { useFantasyStore } from '../stores/fantasyStore';
-import { POSITIONS, YEAR_FILTERS, INDIVIDUAL_YEARS } from '../utils/constants';
-import type { PositionFilter, YearFilter } from '../types';
+import { POSITIONS, YEAR_FILTERS, INDIVIDUAL_YEARS, getWeeksForYear } from '../utils/constants';
+import type { PositionFilter, WeekFilter, YearFilter } from '../types';
 
 export function FilterBar() {
-  const { positionFilter, yearFilter, setPositionFilter, setYearFilter, openConfigModal } =
-    useFantasyStore();
+  const {
+    positionFilter,
+    yearFilter,
+    weekFilter,
+    setPositionFilter,
+    setYearFilter,
+    setWeekFilter,
+    openConfigModal,
+  } = useFantasyStore(
+    useShallow((state) => ({
+      positionFilter: state.positionFilter,
+      yearFilter: state.yearFilter,
+      weekFilter: state.weekFilter,
+      setPositionFilter: state.setPositionFilter,
+      setYearFilter: state.setYearFilter,
+      setWeekFilter: state.setWeekFilter,
+      openConfigModal: state.openConfigModal,
+    }))
+  );
 
   const positionOptions = POSITIONS.map((p) => ({
     value: p,
@@ -15,6 +33,18 @@ export function FilterBar() {
   const yearOptions = [
     ...YEAR_FILTERS,
     ...INDIVIDUAL_YEARS,
+  ];
+
+  const weeks = getWeeksForYear(yearFilter);
+  const weekOptions: { value: WeekFilter; label: string }[] = [
+    { value: 'Season', label: 'Full Season' },
+    ...weeks.map(({ week, gamesPlayed, gamesScheduled }) => ({
+      value: week,
+      label:
+        gamesScheduled && gamesPlayed < gamesScheduled
+          ? `Week ${week} (${gamesPlayed} of ${gamesScheduled} games)`
+          : `Week ${week}`,
+    })),
   ];
 
   return (
@@ -33,6 +63,15 @@ export function FilterBar() {
           options={yearOptions}
           onChange={setYearFilter}
         />
+
+        {weeks.length > 0 && (
+          <Dropdown<WeekFilter>
+            label="Week"
+            value={weekFilter}
+            options={weekOptions}
+            onChange={setWeekFilter}
+          />
+        )}
 
         <div className="flex-1" />
 

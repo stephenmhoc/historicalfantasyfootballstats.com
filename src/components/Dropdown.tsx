@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 interface DropdownOption<T> {
   value: T;
   label: string;
@@ -16,12 +18,15 @@ export function Dropdown<T extends string | number>({
   options,
   onChange,
 }: DropdownProps<T>) {
+  const id = useId();
+
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+      <label htmlFor={id} className="text-xs font-medium text-gray-500 uppercase tracking-wide">
         {label}
       </label>
       <select
+        id={id}
         value={String(value)}
         onChange={(e) => {
           const selected = options.find((o) => String(o.value) === e.target.value);

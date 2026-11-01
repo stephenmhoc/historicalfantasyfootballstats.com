@@ -19,11 +19,8 @@ export function filterByYearRange(
 
   switch (yearFilter) {
     case 'AllYears':
-    case 'Last56':
-    case 'Last55':
       return data.filter((p) => p.year >= DATA_START_YEAR && p.year <= DATA_END_YEAR);
     case 'Last36':
-    case 'Last35':
       return filterByRecentYears(data, 36);
     case '2020s':
       return data.filter((p) => p.year >= 2020 && p.year <= 2029);

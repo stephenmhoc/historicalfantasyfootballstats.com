@@ -31,5 +31,12 @@ playwright-report
 # Raw data (users download their own)
 *.csv
 
+# Derived from public/data by scripts/buildMcpData.js
+public/data/mcp
+
+# Cloudflare build output
+.cloudflare
+
 .playwright-mcp
+.cf
 .claude

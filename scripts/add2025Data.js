@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import Papa from 'papaparse';
 import { fileURLToPath } from 'url';
+import { hasPlayed, roughFantasyPoints } from './lib/nflverse.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -108,6 +109,7 @@ function cleanRows(rows) {
   return rows
     .map((row, index) => cleanRow(row, index + 3))
     .filter(Boolean)
+    .filter(hasPlayed)
     .sort((a, b) => roughFantasyPoints(b) - roughFantasyPoints(a));
 }
 
@@ -182,17 +184,6 @@ function number(value, field, lineNumber) {
   return Number.isInteger(parsed) ? parsed : Math.round(parsed * 10) / 10;
 }
 
-function roughFantasyPoints(row) {
-  return (
-    row.passYds / 25 +
-    row.passTD * 4 +
-    row.rushYds / 10 +
-    row.rushTD * 6 +
-    row.recYds / 10 +
-    row.recTD * 6
-  );
-}
-
 function loadExistingData() {
   const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
 
@@ -204,19 +195,27 @@ function loadExistingData() {
 }
 
 function writeData(existingData, newRows) {
+  if (newRows.length === 0) {
+    throw new Error(`No ${YEAR} rows found; leaving ${DATA_FILE} unchanged`);
+  }
+
   const existing2025Rows = existingData.filter((row) => row.year === YEAR);
   const retainedRows = existingData.filter((row) => row.year !== YEAR);
-  const retainedBefore = JSON.stringify(retainedRows);
-  const merged = [...newRows, ...retainedRows];
+  const merged = JSON.stringify([...newRows, ...retainedRows]);
 
-  fs.writeFileSync(DATA_FILE, JSON.stringify(merged));
+  // Verify a temp file first, so a failed write can never damage the only copy.
+  const tempFile = `${DATA_FILE}.tmp`;
+  fs.writeFileSync(tempFile, merged);
 
-  const writtenData = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-  const retainedAfter = JSON.stringify(writtenData.filter((row) => row.year !== YEAR));
+  const writtenData = JSON.parse(fs.readFileSync(tempFile, 'utf8'));
+  const retainedAfter = writtenData.filter((row) => row.year !== YEAR);
 
-  if (retainedAfter !== retainedBefore) {
+  if (JSON.stringify(retainedAfter) !== JSON.stringify(retainedRows)) {
+    fs.rmSync(tempFile);
     throw new Error(`Safety check failed: non-${YEAR} data changed`);
   }
+
+  fs.renameSync(tempFile, DATA_FILE);
 
   return {
     addedRows: newRows.length,

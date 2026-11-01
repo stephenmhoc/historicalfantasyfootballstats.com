@@ -211,6 +211,12 @@ describe('calculateFantasyPoints', () => {
   });
 
   describe('edge cases', () => {
+    it('does not score yards when yards per point is 0', () => {
+      const scoring: ScoringConfig = { ...DEFAULT_SCORING, passingYardsPerPoint: 0 };
+      const player = createEmptyPlayer({ passYds: 300, passTD: 1 });
+      expect(calculateFantasyPoints(player, scoring)).toBe(4);
+    });
+
     it('returns 0 for a player with no stats', () => {
       const player = createEmptyPlayer();
       const points = calculateFantasyPoints(player, DEFAULT_SCORING);

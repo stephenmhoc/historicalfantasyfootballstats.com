@@ -43,6 +43,13 @@ const baseColumns: ColumnDef<PlayerSeasonWithPoints>[] = [
   },
 ];
 
+// Replaces the Year and G columns when a single week is shown
+const weeklyColumns: ColumnDef<PlayerSeasonWithPoints>[] = [
+  { accessorKey: 'week', header: 'Week', size: 50 },
+  ...baseColumns.filter((column) => column.header !== 'Year' && column.header !== 'G'),
+  { accessorKey: 'opponent', header: 'Opp', size: 60 },
+];
+
 // Passing columns
 const passingColumns: ColumnDef<PlayerSeasonWithPoints>[] = [
   { accessorKey: 'passCmp', header: 'Cmp', size: 50 },
@@ -73,14 +80,17 @@ const fumbleColumns: ColumnDef<PlayerSeasonWithPoints>[] = [
 ];
 
 export function getColumnsForPosition(
-  position: PositionFilter
+  position: PositionFilter,
+  showWeek = false
 ): ColumnDef<PlayerSeasonWithPoints>[] {
+  const identityColumns = showWeek ? weeklyColumns : baseColumns;
+
   switch (position) {
     case 'QB':
       // QB: passing first, then rushing, then receiving at the end
       return [
         rankColumn,
-        ...baseColumns,
+        ...identityColumns,
         ...passingColumns,
         ...rushingColumns,
         ...receivingColumns,
@@ -90,7 +100,7 @@ export function getColumnsForPosition(
       // RB: rushing first, then receiving, then passing at the end
       return [
         rankColumn,
-        ...baseColumns,
+        ...identityColumns,
         ...rushingColumns,
         ...receivingColumns,
         ...passingColumns,
@@ -101,7 +111,7 @@ export function getColumnsForPosition(
       // WR/TE: receiving first, then rushing, then passing at the end
       return [
         rankColumn,
-        ...baseColumns,
+        ...identityColumns,
         ...receivingColumns,
         ...rushingColumns,
         ...passingColumns,
@@ -111,7 +121,7 @@ export function getColumnsForPosition(
     default:
       return [
         rankColumn,
-        ...baseColumns,
+        ...identityColumns,
         ...passingColumns,
         ...rushingColumns,
         ...receivingColumns,

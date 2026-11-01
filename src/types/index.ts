@@ -4,10 +4,7 @@ export type PositionFilter = Position | 'All';
 
 export type YearFilter =
   | 'AllYears'
-  | 'Last56'
-  | 'Last55'
   | 'Last36'
-  | 'Last35'
   | '2020s'
   | '2010s'
   | '2000s'
@@ -16,14 +13,24 @@ export type YearFilter =
   | '1970s'
   | number; // Individual year
 
+export type WeekFilter = 'Season' | number;
+
+export interface WeekSummary {
+  week: number;
+  gamesPlayed: number;
+  gamesScheduled: number | null;
+}
+
 export interface PlayerSeason {
   player: string;
   team: string;
   position: Position;
   age: number;
   games: number;
-  gamesStarted: number;
+  gamesStarted: number | null; // Not published for nflverse-sourced seasons
   year: number;
+  week?: number;
+  opponent?: string;
 
   // Passing
   passCmp: number;

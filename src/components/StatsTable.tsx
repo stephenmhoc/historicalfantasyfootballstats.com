@@ -10,17 +10,23 @@ import { useFantasyData } from '../hooks/useFantasyData';
 import { useFantasyStore } from '../stores/fantasyStore';
 import { getColumnsForPosition } from '../utils/columns';
 
+const TEXT_COLUMNS = new Set(['rank', 'player', 'team', 'year', 'week', 'opponent']);
+
+const ARIA_SORT = { asc: 'ascending', desc: 'descending' } as const;
+
 export function StatsTable() {
   const { data, loading, error } = useFantasyData();
-  const { positionFilter } = useFantasyStore();
+  const positionFilter = useFantasyStore((state) => state.positionFilter);
+  const weekFilter = useFantasyStore((state) => state.weekFilter);
+  const showWeek = typeof weekFilter === 'number';
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'fantasyPoints', desc: true },
   ]);
 
   const columns = useMemo(
-    () => getColumnsForPosition(positionFilter),
-    [positionFilter]
+    () => getColumnsForPosition(positionFilter, showWeek),
+    [positionFilter, showWeek]
   );
 
   const table = useReactTable({
@@ -88,27 +94,30 @@ export function StatsTable() {
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 const isPlayerColumn = header.column.id === 'player';
-                const isTextColumn = header.column.id === 'rank' || header.column.id === 'player' || header.column.id === 'team' || header.column.id === 'year';
+                const isTextColumn = TEXT_COLUMNS.has(header.column.id);
+                const sorted = header.column.getIsSorted();
                 return (
                   <th
                     key={header.id}
-                    onClick={header.column.getToggleSortingHandler()}
-                    className={`px-3 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider
-                               cursor-pointer hover:bg-gray-100 select-none whitespace-nowrap
-                               ${isTextColumn ? 'text-left' : 'text-right'}
+                    aria-sort={sorted ? ARIA_SORT[sorted] : 'none'}
+                    className={`p-0 hover:bg-gray-100
                                ${isPlayerColumn ? 'sticky left-0 z-10 bg-gray-50 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]' : ''}`}
                     style={{ width: header.column.getSize() }}
                   >
-                    <div className={`flex items-center gap-1 ${isTextColumn ? '' : 'justify-end'}`}>
+                    <button
+                      type="button"
+                      onClick={header.column.getToggleSortingHandler()}
+                      className={`w-full px-3 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider
+                                 cursor-pointer select-none whitespace-nowrap flex items-center gap-1
+                                 ${isTextColumn ? 'text-left' : 'text-right justify-end'}`}
+                    >
                       {flexRender(
                         header.column.columnDef.header,
                         header.getContext()
                       )}
-                      {{
-                        asc: ' ↑',
-                        desc: ' ↓',
-                      }[header.column.getIsSorted() as string] ?? null}
-                    </div>
+                      {sorted === 'asc' && ' ↑'}
+                      {sorted === 'desc' && ' ↓'}
+                    </button>
                   </th>
                 );
               })}
@@ -123,7 +132,7 @@ export function StatsTable() {
             >
               {row.getVisibleCells().map((cell) => {
                 const isPlayerColumn = cell.column.id === 'player';
-                const isTextColumn = cell.column.id === 'rank' || cell.column.id === 'player' || cell.column.id === 'team' || cell.column.id === 'year';
+                const isTextColumn = TEXT_COLUMNS.has(cell.column.id);
                 const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
                 return (
                   <td

@@ -1,9 +1,16 @@
 import { FilterBar } from './components/FilterBar';
 import { StatsTable } from './components/StatsTable';
 import { ScoringModal } from './components/ScoringModal';
-import { DATA_END_YEAR, DATA_START_YEAR, TOTAL_DATA_YEARS } from './utils/constants';
+import {
+  DATA_END_YEAR,
+  DATA_START_YEAR,
+  TOTAL_DATA_YEARS,
+  getWeeksForYear,
+} from './utils/constants';
 
 function App() {
+  const latestWeek = getWeeksForYear(DATA_END_YEAR).at(-1)?.week;
+
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
@@ -12,6 +19,7 @@ function App() {
           <h1 className="text-2xl md:text-3xl font-bold">Historical Fantasy Football Stats</h1>
           <p className="text-emerald-200 text-sm mt-1">
             {DATA_START_YEAR}-{DATA_END_YEAR}
+            {latestWeek && ` · ${DATA_END_YEAR} through Week ${latestWeek}`}
           </p>
           <p className="text-emerald-100/80 text-sm mt-3 max-w-2xl">
             Compare fantasy football performance across {TOTAL_DATA_YEARS} years of data. Filter by
@@ -28,7 +36,8 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 py-6 flex-1 w-full">
         {/* Top 500 note */}
         <p className="text-sm text-gray-500 mb-3">
-          Showing top 500 results sorted by fantasy points
+          Showing top 500 results sorted by fantasy points. Targets before 1992 and fumbles lost
+          before 1994 are estimates.
         </p>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <StatsTable />
@@ -77,6 +86,15 @@ function App() {
               className="text-gray-500 hover:text-gray-700 underline"
             >
               Pro Football Reference
+            </a>{' '}
+            and{' '}
+            <a
+              href="https://github.com/nflverse/nflverse-data"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-gray-700 underline"
+            >
+              nflverse
             </a>
           </p>
           <p className="mt-2 text-gray-400">Go Texans!</p>

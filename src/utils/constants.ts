@@ -1,4 +1,5 @@
-import type { ScoringConfig, PositionFilter, YearFilter } from '../types';
+import dataMeta from '../generated/dataMeta.json';
+import type { ScoringConfig, PositionFilter, WeekSummary, YearFilter } from '../types';
 
 export const DEFAULT_SCORING: ScoringConfig = {
   passingYardsPerPoint: 25,
@@ -15,13 +16,19 @@ export const DEFAULT_SCORING: ScoringConfig = {
 
 export const POSITIONS: PositionFilter[] = ['All', 'QB', 'RB', 'WR', 'TE'];
 
-export const DATA_START_YEAR = 1970;
-export const DATA_END_YEAR = 2025;
+export const DATA_START_YEAR = dataMeta.startYear;
+export const DATA_END_YEAR = dataMeta.endYear;
 export const TOTAL_DATA_YEARS = DATA_END_YEAR - DATA_START_YEAR + 1;
+
+const WEEKLY_SEASONS = dataMeta.weeklySeasons as Record<string, WeekSummary[]>;
+
+export function getWeeksForYear(year: YearFilter): WeekSummary[] {
+  return typeof year === 'number' ? (WEEKLY_SEASONS[year] ?? []) : [];
+}
 
 export const YEAR_FILTERS: { value: YearFilter; label: string }[] = [
   { value: 'Last36', label: 'Last 36 Years' },
-  { value: 'Last56', label: 'Last 56 Years' },
+  { value: 'AllYears', label: `All ${TOTAL_DATA_YEARS} Years` },
   { value: '2020s', label: "2020's" },
   { value: '2010s', label: "2010's" },
   { value: '2000s', label: "2000's" },

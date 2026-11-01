@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useId, useState, useEffect } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { Modal } from './Modal';
 import { useFantasyStore } from '../stores/fantasyStore';
 import type { ScoringConfig } from '../types';
@@ -12,14 +13,31 @@ interface ScoringInputProps {
 }
 
 function ScoringInput({ label, value, onChange, step = 1, suffix }: ScoringInputProps) {
+  const id = useId();
+
+  // Kept as text because "" and "-" are valid on the way to typing a number like -1.
+  const [text, setText] = useState(String(value));
+
+  useEffect(() => {
+    setText((current) => (parseFloat(current) === value ? current : String(value)));
+  }, [value]);
+
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+      <label htmlFor={id} className="text-sm font-medium text-gray-700">
+        {label}
+      </label>
       <div className="flex items-center gap-2">
         <input
+          id={id}
           type="number"
-          value={value}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+          value={text}
+          onChange={(e) => {
+            setText(e.target.value);
+            const parsed = parseFloat(e.target.value);
+            if (Number.isFinite(parsed)) onChange(parsed);
+          }}
+          onBlur={() => setText(String(value))}
           step={step}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg
                      focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
@@ -32,7 +50,15 @@ function ScoringInput({ label, value, onChange, step = 1, suffix }: ScoringInput
 
 export function ScoringModal() {
   const { isConfigModalOpen, closeConfigModal, scoringConfig, setScoringConfig, resetScoringConfig } =
-    useFantasyStore();
+    useFantasyStore(
+      useShallow((state) => ({
+        isConfigModalOpen: state.isConfigModalOpen,
+        closeConfigModal: state.closeConfigModal,
+        scoringConfig: state.scoringConfig,
+        setScoringConfig: state.setScoringConfig,
+        resetScoringConfig: state.resetScoringConfig,
+      }))
+    );
 
   // Local state for form
   const [localConfig, setLocalConfig] = useState<ScoringConfig>(scoringConfig);
