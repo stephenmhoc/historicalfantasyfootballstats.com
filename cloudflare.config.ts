@@ -7,6 +7,7 @@ export default defineConfig({
     name: 'historicalfantasyfootballstats',
     entrypoint,
     compatibilityDate: '2026-10-01',
+    compatibilityFlags: ['nodejs_compat'], // Sentry needs AsyncLocalStorage.
     env: {
       ASSETS: bindings.assets(),
       MCP_RATE_LIMITER: bindings.rateLimit({

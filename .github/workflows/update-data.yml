@@ -20,8 +20,26 @@ permissions:
 jobs:
   update:
     runs-on: ubuntu-latest
+    env:
+      # The DSN's public key, which only allows sending check-ins.
+      SENTRY_MONITOR_URL: https://o4510771621789696.ingest.us.sentry.io/api/4512358195986432/cron/update-data/58692f0ccd6e2745819d4b41d340e1b3/
 
     steps:
+      # Sentry raises an issue if this job fails or stops running. The margin is wide
+      # because GitHub often starts scheduled workflows late.
+      - name: Report start to Sentry
+        continue-on-error: true
+        run: |
+          curl -fsS -X POST "$SENTRY_MONITOR_URL" -H 'Content-Type: application/json' -d '{
+            "status": "in_progress",
+            "monitor_config": {
+              "schedule": { "type": "crontab", "value": "17 10 * * *" },
+              "timezone": "UTC",
+              "checkin_margin": 180,
+              "max_runtime": 30
+            }
+          }'
+
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -54,6 +72,8 @@ jobs:
 
       - name: Build
         if: steps.changes.outputs.changed == 'true'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
         run: npm run build
 
       - name: Commit and push
@@ -78,3 +98,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh api -X PUT "repos/$GITHUB_REPOSITORY/actions/workflows/update-data.yml/enable"
+
+      - name: Report result to Sentry
+        if: always()
+        continue-on-error: true
+        env:
+          STATUS: ${{ job.status == 'success' && 'ok' || 'error' }}
+        run: curl -fsS "$SENTRY_MONITOR_URL?status=$STATUS"
