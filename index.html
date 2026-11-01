@@ -7,7 +7,7 @@
     <title>Historical Fantasy Football Stats (%VITE_DATA_RANGE%)</title>
     <meta
       name="description"
-      content="Explore historical fantasy football stats from %VITE_DATA_RANGE%. Filter by position and season, customize scoring, and compare top fantasy performances."
+      content="Compare NFL fantasy football stats from %VITE_DATA_RANGE% with custom PPR, half-PPR, or standard scoring. Rank every QB, RB, WR, and TE season, with live weekly stats."
     />
     <meta name="author" content="Stephen Meriwether" />
     <meta name="robots" content="index,follow" />
@@ -17,12 +17,12 @@
     <meta property="og:title" content="Historical Fantasy Football Stats" />
     <meta
       property="og:description"
-      content="Explore historical fantasy football stats from %VITE_DATA_RANGE%. Filter by position and season, customize scoring, and compare top fantasy performances."
+      content="Compare NFL fantasy football stats from %VITE_DATA_RANGE% with custom PPR, half-PPR, or standard scoring. Rank every QB, RB, WR, and TE season, with live weekly stats."
     />
     <meta property="og:url" content="https://historicalfantasyfootballstats.com/" />
     <meta property="og:site_name" content="Historical Fantasy Football Stats" />
-    <meta property="og:image" content="https://historicalfantasyfootballstats.com/og-image.svg" />
-    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image" content="https://historicalfantasyfootballstats.com/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -30,9 +30,9 @@
     <meta name="twitter:title" content="Historical Fantasy Football Stats" />
     <meta
       name="twitter:description"
-      content="Explore historical fantasy football stats from %VITE_DATA_RANGE%. Filter by position and season, customize scoring, and compare top fantasy performances."
+      content="Compare NFL fantasy football stats from %VITE_DATA_RANGE% with custom PPR, half-PPR, or standard scoring. Rank every QB, RB, WR, and TE season, with live weekly stats."
     />
-    <meta name="twitter:image" content="https://historicalfantasyfootballstats.com/og-image.svg" />
+    <meta name="twitter:image" content="https://historicalfantasyfootballstats.com/og-image.png" />
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -49,9 +49,25 @@
         }
       }
     </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "NFL Fantasy Football Stats %VITE_DATA_RANGE%",
+        "description": "Season and weekly NFL stats for quarterbacks, running backs, wide receivers, and tight ends, with fantasy points under configurable scoring.",
+        "url": "https://historicalfantasyfootballstats.com/",
+        "temporalCoverage": "1970/..",
+        "creator": { "@type": "Person", "name": "Stephen Meriwether", "url": "https://merimerimeri.com" },
+        "distribution": {
+          "@type": "DataDownload",
+          "encodingFormat": "application/json",
+          "contentUrl": "https://historicalfantasyfootballstats.com/data/fantasy_data.json"
+        }
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><!--static-content--></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -26,6 +26,13 @@ test.describe('Historical Fantasy Football Stats', () => {
     await expect(thirdRowRank).toHaveText('3');
   });
 
+  test('serves crawlable content before JavaScript runs', async ({ request }) => {
+    const html = await (await request.get('/')).text();
+    expect(html).toContain('<h1');
+    expect(html).toContain('Best Fantasy Seasons of All Time');
+    expect(html).toContain('href="/mcp"');
+  });
+
   test('rank column is sortable', async ({ page }) => {
     await page.goto('/');
 

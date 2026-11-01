@@ -90,7 +90,7 @@ claude mcp add --transport http fantasy-stats https://historicalfantasyfootballs
 
 Tools that return fantasy points accept a `preset` (`ppr`, `half_ppr`, `standard`) and any individual overrides.
 
-It runs in the same Cloudflare Worker that serves the site (`src/worker.ts`). `npm run build` packs the data into `public/data/mcp/` for it.
+Its docs page is `public/mcp.html`, served when a browser or crawler requests `/mcp`. It runs in the same Cloudflare Worker that serves the site (`src/worker.ts`). `npm run build` packs the data into `public/data/mcp/` for it.
 
 ### Limits
 

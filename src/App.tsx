@@ -76,6 +76,10 @@ function App() {
             >
               Open source on GitHub
             </a>
+            <span className="text-gray-400">•</span>
+            <a href="/mcp" className="text-gray-500 hover:text-gray-900">
+              MCP server
+            </a>
           </p>
           <p className="mt-2 text-gray-400">
             Data from{' '}
