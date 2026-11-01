@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { cloudflare } from '@cloudflare/vite-plugin'
 import dataMeta from './src/generated/dataMeta.json'
+import { buildCsvFiles } from './src/seo/csv'
 import { siteFooter } from './src/seo/footer'
 import { buildLlmsTxt, buildPages, buildSitemap, homepageContent, type SeoData } from './src/seo/pages'
 
@@ -47,6 +48,7 @@ function seoPages(): Plugin {
       for (const page of pages) emit(`${page.path.slice(1)}.html`, page.html)
       emit('sitemap.xml', buildSitemap(pages, data))
       emit('llms.txt', buildLlmsTxt(data))
+      for (const { fileName, source } of buildCsvFiles(data)) emit(fileName, source)
 
       // Written over the copies from public/, so these share the footer too.
       for (const file of ['mcp.html', '404.html']) {

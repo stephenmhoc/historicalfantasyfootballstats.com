@@ -48,6 +48,11 @@ function App() {
         <p className="text-sm text-gray-500 mb-3">
           Showing top 500 results sorted by fantasy points. Targets before 1992 and fumbles lost
           before 1994 are estimates.
+          {' '}
+          <a href="/data" className="text-emerald-700 hover:text-emerald-900 underline">
+            Download the data
+          </a>
+          .
         </p>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <StatsTable />
