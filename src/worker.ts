@@ -28,6 +28,12 @@ export default {
     const { origin, pathname } = new URL(request.url);
     if (pathname !== '/mcp') return env.ASSETS.fetch(request);
 
+    // Browsers and crawlers get the docs page. MCP clients always accept event streams.
+    const isPageRequest =
+      (request.method === 'GET' || request.method === 'HEAD') &&
+      !request.headers.get('Accept')?.includes('text/event-stream');
+    if (isPageRequest) return env.ASSETS.fetch(request);
+
     const key = request.headers.get('CF-Connecting-IP') ?? 'unknown';
     const { success } = await env.MCP_RATE_LIMITER.limit({ key });
     if (!success) {

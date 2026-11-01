@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fantasy Football MCP Server: Free NFL Stats for AI Agents</title>
+    <meta
+      name="description"
+      content="A free, open MCP server for NFL fantasy football stats. Connect Claude, Cursor, or any MCP client to every season since 1970 and live weekly data, with custom scoring and no API key."
+    />
+    <meta name="theme-color" content="#0f766e" />
+    <link rel="icon" type="image/svg+xml" href="/football.svg" />
+    <link rel="canonical" href="https://historicalfantasyfootballstats.com/mcp" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Fantasy Football MCP Server" />
+    <meta
+      property="og:description"
+      content="Connect any AI agent to NFL fantasy stats since 1970, with live weekly data and custom scoring. Free, with no API key."
+    />
+    <meta property="og:url" content="https://historicalfantasyfootballstats.com/mcp" />
+    <meta property="og:site_name" content="Historical Fantasy Football Stats" />
+    <meta property="og:image" content="https://historicalfantasyfootballstats.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@stephenmhoc" />
+    <meta name="twitter:title" content="Fantasy Football MCP Server" />
+    <meta
+      name="twitter:description"
+      content="Connect any AI agent to NFL fantasy stats since 1970, with live weekly data and custom scoring. Free, with no API key."
+    />
+    <meta name="twitter:image" content="https://historicalfantasyfootballstats.com/og-image.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Fantasy Football MCP Server",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Any",
+        "url": "https://historicalfantasyfootballstats.com/mcp",
+        "description": "A free, open Model Context Protocol server for NFL fantasy football stats since 1970, with live weekly data and custom scoring.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": { "@type": "Person", "name": "Stephen Meriwether", "url": "https://merimerimeri.com" }
+      }
+    </script>
+    <style>
+      :root {
+        --ink: #111827;
+        --muted: #4b5563;
+        --line: #e5e7eb;
+        --panel: #f9fafb;
+        --brand: #065f46;
+        --link: #047857;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        color: var(--ink);
+        background: #f3f4f6;
+        font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+      }
+      a {
+        color: var(--link);
+      }
+      header {
+        padding: 40px 16px;
+        color: #fff;
+        background: var(--brand);
+      }
+      header a {
+        color: #a7f3d0;
+      }
+      header p {
+        margin: 12px 0 0;
+        color: #d1fae5;
+      }
+      .wrap {
+        max-width: 760px;
+        margin: 0 auto;
+      }
+      main {
+        padding: 8px 16px 40px;
+      }
+      section {
+        margin-top: 24px;
+        padding: 24px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(1.75rem, 5vw, 2.25rem);
+        line-height: 1.2;
+      }
+      h2 {
+        margin: 0 0 12px;
+        font-size: 1.3rem;
+        line-height: 1.3;
+      }
+      h3 {
+        margin: 20px 0 6px;
+        font-size: 1rem;
+      }
+      p {
+        margin: 0 0 12px;
+      }
+      ul {
+        margin: 0;
+        padding-left: 20px;
+      }
+      pre {
+        margin: 0 0 12px;
+        padding: 12px;
+        overflow-x: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font-size: 0.875rem;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+      .table {
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9375rem;
+      }
+      th,
+      td {
+        padding: 8px 12px 8px 0;
+        text-align: left;
+        vertical-align: top;
+        border-bottom: 1px solid var(--line);
+      }
+      footer {
+        padding: 0 16px 32px;
+        color: var(--muted);
+        font-size: 0.875rem;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <a href="/">Historical Fantasy Football Stats</a>
+        <h1>Fantasy Football MCP Server</h1>
+        <p>
+          Give your AI agent every NFL fantasy season since 1970, plus live weekly stats for the
+          current season. It's free and open, with no API key or account.
+        </p>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section>
+        <h2>Connect in one step</h2>
+        <p>Add this URL to any client that supports remote MCP servers:</p>
+        <pre><code>https://historicalfantasyfootballstats.com/mcp</code></pre>
+
+        <h3>Claude Code</h3>
+        <pre><code>claude mcp add --transport http fantasy-stats https://historicalfantasyfootballstats.com/mcp</code></pre>
+
+        <h3>Claude</h3>
+        <p>Open Settings, go to Connectors, add a custom connector, and paste the URL above.</p>
+
+        <h3>Cursor</h3>
+        <p>Add this to <code>.cursor/mcp.json</code>:</p>
+        <pre><code>{
+  "mcpServers": {
+    "fantasy-stats": {
+      "url": "https://historicalfantasyfootballstats.com/mcp"
+    }
+  }
+}</code></pre>
+
+        <h3>VS Code</h3>
+        <p>Add this to <code>.vscode/mcp.json</code>:</p>
+        <pre><code>{
+  "servers": {
+    "fantasy-stats": {
+      "type": "http",
+      "url": "https://historicalfantasyfootballstats.com/mcp"
+    }
+  }
+}</code></pre>
+      </section>
+
+      <section>
+        <h2>What you can ask</h2>
+        <ul>
+          <li>Who had the best fantasy season ever in half-PPR with 6-point passing touchdowns?</li>
+          <li>Show Josh Allen's game log this season and his best week.</li>
+          <li>Who led running backs in points per game last season, with at least 10 games?</li>
+          <li>Rank the top career wide receivers in standard scoring.</li>
+          <li>Which quarterbacks scored the most points this week?</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Tools</h2>
+        <div class="table">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Tool</th>
+                <th scope="col">What it does</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>get_data_info</code></td>
+                <td>Seasons covered, the latest week, freshness, and known caveats</td>
+              </tr>
+              <tr>
+                <td><code>search_players</code></td>
+                <td>Finds players by full or partial name</td>
+              </tr>
+              <tr>
+                <td><code>get_player_stats</code></td>
+                <td>Season-by-season stats and career totals</td>
+              </tr>
+              <tr>
+                <td><code>get_player_weekly</code></td>
+                <td>Game-by-game stats for seasons with weekly data</td>
+              </tr>
+              <tr>
+                <td><code>get_leaders</code></td>
+                <td>Ranks seasons, single weeks, careers, or points per game</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Custom scoring</h2>
+        <p>
+          Tools that return fantasy points accept a preset of <code>ppr</code>,
+          <code>half_ppr</code>, or <code>standard</code>, and any individual override. For example,
+          this scores half-PPR with 6-point passing touchdowns:
+        </p>
+        <pre><code>{ "preset": "half_ppr", "passingTD": 6 }</code></pre>
+      </section>
+
+      <section>
+        <h2>Data</h2>
+        <ul>
+          <li>QBs, RBs, WRs, and TEs, regular season only.</li>
+          <li>Seasons from 1970 through 2025 come from Pro Football Reference.</li>
+          <li>Seasons from 2026 onward come from nflverse and update daily.</li>
+          <li>Targets before 1992 and fumbles lost before 1994 are estimates.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Frequently asked questions</h2>
+        <h3>What is an MCP server?</h3>
+        <p>
+          The <a href="https://modelcontextprotocol.io">Model Context Protocol</a> is an open
+          standard that lets AI applications use outside tools and data. This server gives them
+          fantasy football stats they can look up instead of guessing.
+        </p>
+        <h3>Does it cost anything?</h3>
+        <p>No. It's free, and there is no API key, account, or sign-up.</p>
+        <h3>Are there rate limits?</h3>
+        <p>
+          Yes. Each IP address is limited to about 10 requests every 10 seconds, and a shared daily
+          limit applies. If you hit a limit, the server responds with HTTP 429 or stops until the
+          daily reset at midnight UTC.
+        </p>
+        <h3>Which protocol versions does it support?</h3>
+        <p>
+          It uses Streamable HTTP and supports MCP versions 2025-03-26 through 2026-07-28. The
+          server is read-only.
+        </p>
+        <h3>Is the code open source?</h3>
+        <p>
+          Yes. It's on
+          <a href="https://github.com/smeriwether/historicalfantasyfootballstats.com">GitHub</a>
+          under the MIT license.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <a href="/">Browse the stats</a> · Data from
+      <a href="https://www.pro-football-reference.com/">Pro Football Reference</a> and
+      <a href="https://github.com/nflverse/nflverse-data">nflverse</a>
+    </footer>
+  </body>
+</html>

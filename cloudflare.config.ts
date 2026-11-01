@@ -15,7 +15,7 @@ export default defineConfig({
       }),
     },
     assets: {
-      notFoundHandling: 'single-page-application',
+      notFoundHandling: '404-page',
       // Everything else is served as a static asset, which is free and never runs the Worker.
       runWorkerFirst: ['/mcp'],
     },
