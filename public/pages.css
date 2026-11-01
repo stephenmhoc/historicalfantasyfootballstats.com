@@ -9,6 +9,9 @@
   box-sizing: border-box;
 }
 body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   margin: 0;
   color: var(--ink);
   background: #f3f4f6;
@@ -18,27 +21,88 @@ a {
   color: var(--link);
 }
 header {
-  padding: 16px;
+  padding: 16px 0;
   color: #fff;
   background: var(--brand);
 }
-header a {
-  color: #d1fae5;
-}
-nav ul {
+.site-header {
+  padding: 0 16px;
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 16px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.brand {
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+.explore {
+  padding: 6px 12px;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid rgb(255 255 255 / 40%);
+  border-radius: 8px;
+}
+.explore:hover {
+  background: rgb(255 255 255 / 12%);
 }
 .wrap {
   max-width: 960px;
   margin: 0 auto;
 }
 main {
+  width: 100%;
   padding: 16px;
+}
+main ul:not(.links) {
+  padding-left: 20px;
+  list-style: disc;
+}
+.scoring-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-top: 16px;
+  padding: 12px 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+}
+.scoring-bar p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.scoring-bar .note {
+  flex-basis: 100%;
+}
+.scoring-bar p[hidden],
+.scoring-bar button[hidden] {
+  display: none;
+}
+.scoring-bar button {
+  padding: 8px 16px;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.scoring-bar button:hover {
+  background: #d1fae5;
+}
+.your-score {
+  color: var(--brand);
+  font-weight: 600;
+  background: #ecfdf5;
 }
 section {
   margin-top: 16px;
@@ -46,6 +110,11 @@ section {
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 1px 2px rgb(0 0 0 / 10%);
+}
+h1,
+h2,
+h3 {
+  font-weight: 700;
 }
 h1 {
   margin: 8px 0;
@@ -107,9 +176,4 @@ td {
 th:nth-child(-n + 3),
 td:nth-child(-n + 3) {
   text-align: left;
-}
-footer {
-  padding: 8px 16px 32px;
-  color: var(--muted);
-  font-size: 0.875rem;
 }

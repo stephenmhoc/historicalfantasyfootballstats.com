@@ -1,21 +1,13 @@
 import { FilterBar } from './components/FilterBar';
 import { StatsTable } from './components/StatsTable';
 import { ScoringModal } from './components/ScoringModal';
+import { siteFooter } from './seo/footer';
 import {
   DATA_END_YEAR,
   DATA_START_YEAR,
   TOTAL_DATA_YEARS,
   getWeeksForYear,
 } from './utils/constants';
-
-const siteLinks = [
-  { name: `${DATA_END_YEAR} Fantasy Leaders`, path: `/seasons/${DATA_END_YEAR}` },
-  { name: 'Best Seasons of All Time', path: '/all-time' },
-  { name: 'Career Leaders', path: '/career-leaders' },
-  { name: 'All Seasons', path: '/seasons' },
-  { name: 'How Scoring Works', path: '/methodology' },
-  { name: 'MCP Server', path: '/mcp' },
-];
 
 function App() {
   const latestWeek = getWeeksForYear(DATA_END_YEAR).at(-1)?.week;
@@ -24,17 +16,26 @@ function App() {
     <div className="min-h-screen bg-gray-100 flex flex-col">
       {/* Header */}
       <header className="bg-emerald-800 text-white py-6 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl md:text-3xl font-bold">Historical Fantasy Football Stats</h1>
-          <p className="text-emerald-200 text-sm mt-1">
-            {DATA_START_YEAR}-{DATA_END_YEAR}
-            {latestWeek && ` · ${DATA_END_YEAR} through Week ${latestWeek}`}
-          </p>
-          <p className="text-emerald-100/80 text-sm mt-3 max-w-2xl">
-            Compare fantasy football performance across {TOTAL_DATA_YEARS} years of data. Filter by
-            position and year, customize your league's scoring settings, and discover the greatest fantasy
-            seasons of all time.
-          </p>
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">Historical Fantasy Football Stats</h1>
+            <p className="text-emerald-200 text-sm mt-1">
+              {DATA_START_YEAR}-{DATA_END_YEAR}
+              {latestWeek && ` · ${DATA_END_YEAR} through Week ${latestWeek}`}
+            </p>
+            <p className="text-emerald-100/80 text-sm mt-3 max-w-2xl">
+              Compare fantasy football performance across {TOTAL_DATA_YEARS} years of data. Filter by
+              position and year, customize your league's scoring settings, and discover the greatest fantasy
+              seasons of all time.
+            </p>
+          </div>
+          <a
+            href="/explore"
+            className="self-start sm:self-center shrink-0 px-4 py-2 text-sm font-medium text-white border border-white/40 rounded-lg
+                       hover:bg-white/10 transition-colors"
+          >
+            Explore all pages →
+          </a>
         </div>
       </header>
 
@@ -53,73 +54,8 @@ function App() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-200 text-gray-600 py-6 px-4 mt-auto">
-        <div className="max-w-7xl mx-auto text-center text-sm">
-          <p>
-            Made with ❤️ by{' '}
-            <a
-              href="https://merimerimeri.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-600 hover:text-emerald-700 underline"
-            >
-              Stephen Meriwether
-            </a>
-          </p>
-          <nav aria-label="Popular pages" className="mb-3">
-            <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-              {siteLinks.map(({ name, path }) => (
-                <li key={path}>
-                  <a href={path} className="text-emerald-700 hover:text-emerald-900 underline">
-                    {name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <p className="mt-2 space-x-4">
-            <a
-              href="https://x.com/stephenmhoc"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-900"
-            >
-              Twitter/X
-            </a>
-            <span className="text-gray-400">•</span>
-            <a
-              href="https://github.com/smeriwether/historicalfantasyfootballstats.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-900"
-            >
-              Open source on GitHub
-            </a>
-          </p>
-          <p className="mt-2 text-gray-400">
-            Data from{' '}
-            <a
-              href="https://www.pro-football-reference.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-700 underline"
-            >
-              Pro Football Reference
-            </a>{' '}
-            and{' '}
-            <a
-              href="https://github.com/nflverse/nflverse-data"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-700 underline"
-            >
-              nflverse
-            </a>
-          </p>
-          <p className="mt-2 text-gray-400">Go Texans!</p>
-        </div>
-      </footer>
+      {/* Trusted, static markup shared with the generated pages. */}
+      <div className="mt-auto" dangerouslySetInnerHTML={{ __html: siteFooter(DATA_END_YEAR) }} />
 
       {/* Scoring Config Modal */}
       <ScoringModal />

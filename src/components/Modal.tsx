@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useId } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -8,6 +8,8 @@ interface ModalProps {
 }
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  const titleId = useId();
+
   // Close on escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -36,10 +38,15 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
       />
 
       {/* Modal content - full screen on mobile, centered card on desktop */}
-      <div className="relative bg-white shadow-2xl w-full h-full sm:h-auto sm:max-w-lg sm:max-h-[90vh] sm:rounded-xl overflow-y-auto">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative bg-white shadow-2xl w-full h-full sm:h-auto sm:max-w-3xl sm:max-h-[90vh] sm:rounded-2xl flex flex-col overflow-hidden"
+      >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sm:rounded-t-xl">
-          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+        <div className="shrink-0 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <h2 id={titleId} className="text-lg font-semibold text-gray-900">{title}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -61,8 +68,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6">{children}</div>
+        {children}
       </div>
     </div>
   );

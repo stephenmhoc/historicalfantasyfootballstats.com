@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import meta from '../generated/dataMeta.json';
+import { siteFooter } from './footer';
+import { STAT_KEYS } from './rescoreTable';
 import { buildLlmsTxt, buildPages, buildSitemap, homepageContent, type SeoData, type SeoPage } from './pages';
 
 const DATA_DIR = path.join(__dirname, '..', '..', 'public', 'data');
@@ -69,6 +71,28 @@ describe('buildPages', () => {
     expect(sitemap.match(/<loc>/g)).toHaveLength(pages.length + 2);
     expect(sitemap).toContain(`<loc>https://historicalfantasyfootballstats.com/seasons/${meta.endYear}</loc>\n    <lastmod>`);
     expect(sitemap).toContain('<loc>https://historicalfantasyfootballstats.com/seasons/1985</loc>\n  </url>');
+  });
+
+  it('shares one footer and offers scoring wherever player numbers appear', () => {
+    const footer = siteFooter(meta.endYear);
+    for (const p of pages) expect(p.html).toContain(footer);
+    for (const p of pages.filter(({ html }) => html.includes('data-stats='))) {
+      expect(p.html).toContain('data-scoring-open');
+      expect(p.html).toContain('data-rescorable');
+    }
+  });
+
+  it('stores the stats needed to rescore a row', () => {
+    const row = page('/seasons/2019/rb').html.match(/data-stats="([^"]+)"/)![1].split(',').map(Number);
+    const mccaffrey = data.rows.find((r) => r.year === 2019 && r.player === 'Christian McCaffrey')!;
+    expect(row).toEqual(STAT_KEYS.map((key) => mccaffrey[key]));
+  });
+
+  it('links every generated page group from the explore page', () => {
+    const { html } = page('/explore');
+    for (const href of [`/seasons/${meta.endYear}"`, '/seasons/1970"', '/all-time/qb"', '/career-leaders/te"', '/methodology"']) {
+      expect(html).toContain(href);
+    }
   });
 
   it('points AI engines at the key pages', () => {
