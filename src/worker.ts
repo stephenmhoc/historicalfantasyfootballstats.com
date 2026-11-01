@@ -1,7 +1,5 @@
-import { withSentry } from '@sentry/cloudflare';
 import { Dataset, type PackedLookup } from './mcp/dataset';
 import { handleMcpRequest } from './mcp/server';
-import { sentryOptions } from './sentryConfig';
 
 interface Env {
   ASSETS: { fetch: (input: Request | string) => Promise<Response> };
@@ -25,7 +23,7 @@ async function loadDataset(env: Env, origin: string) {
   return new Dataset(stats, lookup);
 }
 
-export default withSentry(() => sentryOptions, {
+export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const { origin, pathname } = new URL(request.url);
     if (pathname !== '/mcp') return env.ASSETS.fetch(request);
@@ -53,4 +51,4 @@ export default withSentry(() => sentryOptions, {
       return dataset;
     });
   },
-});
+};
