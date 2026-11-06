@@ -42,8 +42,13 @@
         "week": 8,
         "gamesPlayed": 14,
         "gamesScheduled": 14
+      },
+      {
+        "week": 9,
+        "gamesPlayed": 1,
+        "gamesScheduled": 15
       }
     ]
   },
-  "updatedAt": "2026-11-03T17:52:15.711Z"
+  "updatedAt": "2026-11-06T17:31:49.440Z"
 }
